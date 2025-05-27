@@ -4,22 +4,20 @@
 
 class Game {
   constructor() {
-    // Get the canvas and its context
     this.canvas = document.getElementById("gameCanvas");
     this.ctx = this.canvas.getContext("2d");
 
     // Game configuration
     this.width = this.canvas.width;
     this.height = this.canvas.height;
-    this.cellSize = 40; // Size of each maze cell
-    this.difficulty = 1; // Default difficulty (can be changed in settings)
-
+    this.cellSize = 40;
+    this.difficulty = 1;
     // Debug mode
     this.debugMode = false;
     this.showShortestPath = false;
-    this.showAllArtifacts = true; // Show all artifacts in debug mode by default
-    this.showObstacles = true; // Show obstacle boundaries in debug mode by default
-    this.targetArtifactIndex = -1; // Index of artifact to find path to
+    this.showAllArtifacts = true;
+    this.showObstacles = true;
+    this.targetArtifactIndex = -1;
 
     // Game state
     this.running = false;
@@ -28,7 +26,7 @@ class Game {
     this.win = false;
     this.stage = 1;
     this.maxStage = 3;
-    this.timer = 120; // 2 minutes per stage
+    this.timer = 180; // 3 minutes per stage
     this.artifactsCollected = 0;
     this.totalArtifacts = 3;
 
@@ -60,7 +58,6 @@ class Game {
       },
     };
 
-    // Current theme (set based on stage)
     this.currentTheme = this.themes[1];
 
     // Camera/viewport (for scrolling if maze is larger than screen)
@@ -78,7 +75,7 @@ class Game {
     this.timeElapsed = 0;
     this.frameCount = 0;
 
-    // User interface
+    // UI
     this.hudElement = document.getElementById("hud");
     this.timerElement = document.getElementById("timer");
     this.artifactsElement = document.getElementById("artifacts");
@@ -95,7 +92,6 @@ class Game {
     this.backgroundParticles = [];
     this.generateBackgroundParticles();
 
-    // Initialize audio
     if (typeof audioManager !== "undefined") {
       // Init will be called on first user interaction
       this.hasAudio = true;
@@ -103,7 +99,6 @@ class Game {
       this.hasAudio = false;
     }
 
-    // Register event handlers
     window.addEventListener("keydown", (e) => {
       // Handle ESC key for pause/menu
       if (e.key === "Escape" && this.running) {
@@ -145,71 +140,54 @@ class Game {
         e.preventDefault();
       }
 
-      // Initialize audio on first user interaction
       if (this.hasAudio && !audioManager.initialized) {
         audioManager.init();
       }
     });
 
-    // Create menu system
     this.menuSystem = new MenuSystem(this);
   }
 
   startNewGame() {
-    // Reset game state
     this.stage = 1;
     this.gameOver = false;
     this.win = false;
 
-    // Initialize first stage
     this.initStage(true);
 
-    // Start the game loop
     this.running = true;
     this.lastTime = performance.now();
     requestAnimationFrame((timestamp) => this.gameLoop(timestamp));
   }
 
   loadSavedGame() {
-    // Load saved game state
     const savedState = loadGameState();
 
     if (savedState) {
-      // Restore game state from saved data
       this.stage = savedState.stage || 1;
-
-      // First create the maze
       this.initStage(true);
 
-      // Then create the player with the maze
       this.player = new Player(this.maze, this.cellSize);
 
       if (savedState.health) {
         this.player.health = savedState.health;
       }
 
-      // Start the game loop
       this.running = true;
       this.lastTime = performance.now();
       requestAnimationFrame((timestamp) => this.gameLoop(timestamp));
     } else {
-      // If no saved game, start a new one
       this.startNewGame();
     }
   }
 
   initStage(isNewGame = false) {
     try {
-      // Set the current theme based on stage
       this.currentTheme = this.themes[this.stage];
-      console.log(
-        `Initializing stage ${this.stage} with theme "${this.currentTheme.name}"`
-      );
 
       // Scale difficulty based on stage and settings
       const stageDifficulty = this.stage * this.difficulty;
 
-      // Create maze for the current stage
       this.maze = new Maze(
         this.width,
         this.height,
@@ -217,7 +195,6 @@ class Game {
         stageDifficulty
       );
 
-      // Create player if not exists or if this is a new game
       if (!this.player || isNewGame) {
         this.player = new Player(this.maze, this.cellSize);
       } else {
@@ -271,7 +248,7 @@ class Game {
       );
 
       // Reset timer based on difficulty (less time on higher difficulty)
-      this.timer = Math.max(60, 120 - (this.difficulty - 1) * 20);
+      this.timer = Math.max(60, 180 - (this.difficulty - 1) * 20);
 
       // Regenerate background particles with theme colors
       this.generateBackgroundParticles();
@@ -624,7 +601,7 @@ class Game {
   renderTimerBar() {
     const barWidth = this.width;
     const barHeight = 5;
-    const progress = this.timer / 120; // Percentage of time remaining
+    const progress = this.timer / 180; // Percentage of time remaining
 
     // Draw background
     this.ctx.fillStyle = "#333";
@@ -666,7 +643,6 @@ class Game {
       this.height / 2 + 145
     );
 
-    // Add event listener for M key to return to menu
     const menuHandler = (e) => {
       if (e.key === "m" || e.key === "M") {
         this.returnToMenu();
@@ -678,24 +654,17 @@ class Game {
   }
 
   returnToMenu() {
-    // Stop the game
     this.running = false;
     this.paused = false;
-
-    // Save current game state
     this.saveGameState();
-
-    // Show menu
     this.menuSystem.showMenuScreen();
     this.menuSystem.checkForSavedGame();
   }
 
   renderGameOver() {
-    // Darken the screen
     this.ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // Draw game over message
     this.ctx.fillStyle = "#ff0000";
     this.ctx.font = 'bold 36px "Courier New", monospace';
     this.ctx.textAlign = "center";
@@ -730,17 +699,14 @@ class Game {
       );
     }
 
-    // Draw button to return to menu
     this.ctx.fillStyle = "#005f8f";
     const buttonWidth = 200;
     const buttonHeight = 40;
     const buttonX = this.width / 2 - buttonWidth / 2;
     const buttonY = this.height / 2 + 80;
 
-    // Draw button
     this.ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
 
-    // Draw button text
     this.ctx.fillStyle = "#ffffff";
     this.ctx.font = '16px "Courier New", monospace';
     this.ctx.fillText(
@@ -748,14 +714,10 @@ class Game {
       this.width / 2,
       buttonY + buttonHeight / 2 + 5
     );
-
-    // Save stats to localStorage
     this.saveGameState();
 
-    // Remove any existing click handlers before adding new ones
     this.canvas.removeEventListener("click", this._gameOverClickHandler);
 
-    // Define and store the click handler function
     this._gameOverClickHandler = (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -772,50 +734,34 @@ class Game {
       }
     };
 
-    // Add the click handler
     this.canvas.addEventListener("click", this._gameOverClickHandler);
   }
 
   completeStage() {
     if (this.stage < this.maxStage) {
-      // Play completion sound
       if (this.hasAudio) {
         audioManager.playCompleteLevelSound();
       }
 
-      // Show stage completion message
       this.renderStageComplete(() => {
         // Proceed to next stage after delay
         this.stage++;
 
         // Initialize new stage with clean state
         this.initStage(false);
-
-        // Force a redraw to ensure new theme is fully applied
         this.render();
-
-        // Ensure game continues running
         this.running = true;
-
-        // Log successful stage transition
-        console.log(
-          `Transitioned to stage ${this.stage} with theme "${this.currentTheme.name}"`
-        );
       });
     } else {
-      // Player completed all stages
       this.gameOver = true;
       this.win = true;
       this.running = false;
 
-      // Play victory sound
       if (this.hasAudio) {
         audioManager.playCompleteLevelSound();
       }
 
       this.renderVictory();
-
-      // Save stats to localStorage
       this.saveGameState();
     }
   }
@@ -835,25 +781,6 @@ class Game {
       this.height / 2 - 80
     );
 
-    // Display theme name and next theme
-    const nextTheme = this.themes[this.stage + 1];
-    this.ctx.fillStyle = "#ffffff";
-    this.ctx.font = '20px "Courier New", monospace';
-    this.ctx.fillText(
-      `Theme: ${this.currentTheme.name}`,
-      this.width / 2,
-      this.height / 2 - 120
-    );
-
-    if (nextTheme) {
-      this.ctx.fillText(
-        `Next: ${nextTheme.name}`,
-        this.width / 2,
-        this.height / 2 - 40
-      );
-    }
-
-    // Display stage stats
     this.ctx.font = '16px "Courier New", monospace';
     this.ctx.fillText(
       "Time remaining: " + this.timer + " seconds",
@@ -866,13 +793,11 @@ class Game {
       this.height / 2 + 25
     );
 
-    // Create a loading bar
     const barWidth = 300;
     const barHeight = 20;
     const barX = this.width / 2 - barWidth / 2;
     const barY = this.height / 2 + 60;
 
-    // Draw loading bar background
     this.ctx.fillStyle = "#333";
     this.ctx.fillRect(barX, barY, barWidth, barHeight);
 
@@ -893,16 +818,13 @@ class Game {
       }
     }, 30);
 
-    // Save the current state
     this.saveGameState();
   }
 
   renderVictory() {
-    // Darken the screen
     this.ctx.fillStyle = "rgba(0, 0, 30, 0.8)";
     this.ctx.fillRect(0, 0, this.width, this.height);
 
-    // Draw victory message
     this.ctx.fillStyle = "#00ffff";
     this.ctx.font = 'bold 36px "Courier New", monospace';
     this.ctx.textAlign = "center";
@@ -928,13 +850,11 @@ class Game {
       this.height / 2 - 10
     );
 
-    // Create a certificate-like border with Rwanda flag colors
     const certWidth = this.width * 0.6;
     const certHeight = this.height * 0.6;
     const certX = this.width * 0.2;
     const certY = this.height * 0.2;
 
-    // Draw certificate background
     const gradient = this.ctx.createLinearGradient(
       certX,
       certY,
@@ -951,7 +871,6 @@ class Game {
     const rwandaYellow = "#E5BE01";
     const rwandaGreen = "#20603D";
 
-    // Draw Rwanda-colored border
     this.ctx.lineWidth = 10;
 
     // Blue section (top)
@@ -961,28 +880,24 @@ class Game {
     this.ctx.lineTo(certX + certWidth, certY);
     this.ctx.stroke();
 
-    // Yellow section (right)
     this.ctx.strokeStyle = rwandaYellow;
     this.ctx.beginPath();
     this.ctx.moveTo(certX + certWidth, certY);
     this.ctx.lineTo(certX + certWidth, certY + certHeight);
     this.ctx.stroke();
 
-    // Green section (bottom)
     this.ctx.strokeStyle = rwandaGreen;
     this.ctx.beginPath();
     this.ctx.moveTo(certX + certWidth, certY + certHeight);
     this.ctx.lineTo(certX, certY + certHeight);
     this.ctx.stroke();
 
-    // Blue section (left, completing the border)
     this.ctx.strokeStyle = rwandaBlue;
     this.ctx.beginPath();
     this.ctx.moveTo(certX, certY + certHeight);
     this.ctx.lineTo(certX, certY);
     this.ctx.stroke();
 
-    // Add certificate details
     this.ctx.fillStyle = "#ffffff";
     this.ctx.font = 'bold 16px "Courier New", monospace';
     this.ctx.fillText(
@@ -996,7 +911,6 @@ class Game {
       this.height / 2 + 55
     );
 
-    // Add Rwanda-specific text
     this.ctx.fillStyle = "#E5BE01"; // Rwanda yellow
     this.ctx.font = 'italic 16px "Courier New", monospace';
     this.ctx.fillText(
@@ -1005,7 +919,6 @@ class Game {
       this.height / 2 + 80
     );
 
-    // Display completion stats
     this.ctx.fillStyle = "#ffffff";
     this.ctx.font = '14px "Courier New", monospace';
     this.ctx.fillText(
@@ -1024,7 +937,6 @@ class Game {
       this.height / 2 + 150
     );
 
-    // Add celebratory particles
     if (this.frameCount % 10 === 0) {
       this.createCelebratoryParticles();
     }
@@ -1048,7 +960,6 @@ class Game {
       buttonY + buttonHeight / 2 + 5
     );
 
-    // Add click handler for the button
     const clickHandler = (e) => {
       const rect = this.canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -1068,7 +979,6 @@ class Game {
     this.canvas.addEventListener("click", clickHandler);
   }
 
-  // New method to create celebratory particles for the victory screen
   createCelebratoryParticles() {
     // Rwanda flag colors
     const colors = [
@@ -1078,7 +988,6 @@ class Game {
       "#FFFFFF", // White
     ];
 
-    // Create particles from random positions at the top of the screen
     for (let i = 0; i < 5; i++) {
       const x = Math.random() * this.width;
       const color = colors[Math.floor(Math.random() * colors.length)];
@@ -1099,7 +1008,6 @@ class Game {
   }
 
   saveGameState() {
-    // Save game statistics to localStorage
     const stats = {
       completed: this.win,
       stage: this.stage,
@@ -1109,39 +1017,30 @@ class Game {
       timestamp: Date.now(),
     };
 
-    // Save stats using the utility function
     saveGameState(stats);
   }
 
   updateHUD() {
-    // Update timer display
     this.timerElement.textContent = `Time: ${this.timer}`;
-
-    // Update artifacts counter
     this.artifactsElement.textContent = `Artifacts: ${this.artifactsCollected}/${this.totalArtifacts}`;
 
-    // Update health indicator
     if (this.healthElement && this.player) {
       this.healthElement.textContent = `Health: ${this.player.health}%`;
     }
 
-    // Update stage indicator
     if (this.stageElement) {
       this.stageElement.textContent = `Stage: ${this.stage}/${this.maxStage}`;
     }
   }
 
-  // Toggle debug mode
   toggleDebugMode() {
     this.debugMode = !this.debugMode;
 
-    // Also toggle player debug if available
     if (this.player && this.player.debug) {
       this.player.debug.enabled = this.debugMode;
     }
 
     if (this.debugMode) {
-      // Show help message when debug mode is activated
       console.log("Debug Mode Activated!");
       console.log("F1: Toggle Debug Mode");
       console.log("F2: Toggle Shortest Path");
@@ -1150,10 +1049,8 @@ class Game {
       console.log("F5: Toggle Obstacles");
       console.log("B: Toggle Player Debug Details");
 
-      // Show debug help message on screen
       this.showDebugHelp();
     } else {
-      // Clear shortest path when exiting debug mode
       this.showShortestPath = false;
       this.targetArtifactIndex = -1;
       if (this.maze) {
@@ -1164,7 +1061,6 @@ class Game {
     console.log(`Debug mode: ${this.debugMode ? "ON" : "OFF"}`);
   }
 
-  // Show debug help message
   showDebugHelp() {
     const helpText = [
       "DEBUG MODE ACTIVATED",
@@ -1180,7 +1076,6 @@ class Game {
       "This message will disappear in 3 seconds.",
     ];
 
-    // Create overlay for help text
     const overlay = document.createElement("div");
     overlay.style.position = "absolute";
     overlay.style.top = "50%";
@@ -1196,19 +1091,15 @@ class Game {
     overlay.style.zIndex = "1000";
     overlay.style.boxShadow = "0 0 20px rgba(0, 255, 0, 0.5)";
 
-    // Add help text
     overlay.innerHTML = helpText.join("<br>");
 
-    // Add to document
     document.body.appendChild(overlay);
 
-    // Remove after 5 seconds
     setTimeout(() => {
       document.body.removeChild(overlay);
     }, 3000);
   }
 
-  // Toggle shortest path display
   toggleShortestPath() {
     if (!this.debugMode) return;
 
@@ -1248,7 +1139,6 @@ class Game {
     );
   }
 
-  // Update the shortest path to the current target artifact
   updateShortestPath() {
     if (
       !this.debugMode ||
@@ -1277,12 +1167,10 @@ class Game {
     }
   }
 
-  // Render debug information
   renderDebugInfo() {
-    // Set up the debug panel
     this.ctx.save();
     this.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-    this.ctx.fillRect(10, 10, 250, 210);
+    this.ctx.fillRect(15, 15, 250, 210);
     this.ctx.fillStyle = "#00ff00";
     this.ctx.font = "12px monospace";
 
@@ -1335,50 +1223,28 @@ class Game {
       y
     );
 
-    // Show artifact visibility status
-    y += 20;
-    this.ctx.fillText(
-      `Show Artifacts: ${this.showAllArtifacts ? "ON (F4)" : "OFF (F4)"}`,
-      20,
-      y
-    );
-
-    // Show obstacle visibility status
-    y += 20;
-    this.ctx.fillText(
-      `Show Obstacles: ${this.showObstacles ? "ON (F5)" : "OFF (F5)"}`,
-      20,
-      y
-    );
-
-    // Render shortest path if active
     if (this.showShortestPath && this.maze) {
       this.maze.renderShortestPath(this.ctx);
     }
 
-    // Render all artifact positions if enabled
     if (this.showAllArtifacts && this.maze && this.artifacts) {
       this.maze.renderArtifactPositions(this.ctx, this.artifacts);
     }
 
-    // Render obstacle boundaries if enabled
     if (this.showObstacles && this.obstacleManager) {
       this.obstacleManager.renderDebug(this.ctx);
     }
 
-    // Render grid overlay
     this.renderGridOverlay();
 
     this.ctx.restore();
   }
 
-  // Render grid overlay for debugging
   renderGridOverlay() {
     this.ctx.save();
     this.ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
     this.ctx.lineWidth = 0.5;
 
-    // Draw vertical grid lines
     for (let x = 0; x <= this.width; x += this.cellSize) {
       this.ctx.beginPath();
       this.ctx.moveTo(x, 0);
@@ -1386,7 +1252,6 @@ class Game {
       this.ctx.stroke();
     }
 
-    // Draw horizontal grid lines
     for (let y = 0; y <= this.height; y += this.cellSize) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
@@ -1398,10 +1263,8 @@ class Game {
   }
 }
 
-// Start the game when the page loads
 window.addEventListener("load", () => {
   const game = new Game();
 
-  // Create menu system instance
   window.menuSystem = game.menuSystem;
 });

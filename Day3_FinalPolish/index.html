@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutureskillsArtifact</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #111;
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+            color: #00ffff;
+        }
+        
+        canvas {
+            border: 2px solid #333;
+            background: #000;
+        }
+        
+        #game-container {
+            position: relative;
+        }
+        
+        #hud {
+            color: #0f0;
+            font-size: 14px;
+            text-shadow: 0 0 5px #0f0;
+        }
+        
+        #popup-container {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 500px;
+            padding: 20px;
+            background-color: rgba(0, 30, 60, 0.9);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            text-align: center;
+            z-index: 100;
+        }
+        
+        #popup-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #fff;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        #popup-content {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            color: #d0d0d0;
+        }
+        
+        #popup-button {
+            display: inline-block;
+            padding: 8px 20px;
+            background-color: #005f8f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        
+        #popup-button:hover {
+            background-color: #007bff;
+            transform: scale(1.05);
+        }
+        
+        #popup-button:active {
+            transform: scale(0.98);
+        }
+        
+        .stage-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #00ffff;
+            font-size: 14px;
+            text-shadow: 0 0 5px #00ffff;
+        }
+        
+        /* Updated menu screen styling */
+        #menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #7FFFD4, #2E8B57);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            overflow: hidden;
+        }
+        
+        #menu-title {
+            font-size: 42px;
+            color: #FFFFFF;
+            text-shadow: 0 0 15px #00AA00;
+            margin-bottom: 10px;
+            text-align: center;
+            font-weight: bold;
+            animation: titleGlow 2s infinite;
+        }
+        
+        /* Star animation */
+        @keyframes twinkle {
+            0% { opacity: 0.7; transform: scale(1) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.1) rotate(5deg); }
+            100% { opacity: 0.7; transform: scale(1) rotate(0deg); }
+        }
+        
+        .menu-star {
+            position: absolute;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+        
+        .menu-button {
+            display: inline-block;
+            padding: 10px 30px;
+            margin: 10px 0;
+            background-color: transparent;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: auto;
+            text-align: center;
+            text-shadow: 0 0 10px #00AA00;
+        }
+        
+        .menu-button:hover {
+            transform: scale(1.05);
+        }
+        
+        #start-button {
+            animation: enterPulse 1.5s infinite;
+        }
+        
+        #settings-container {
+            display: none;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            width: 200px;
+            background-color: rgba(0, 30, 60, 0.8);
+        }
+        
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+        
+        .settings-label {
+            color: #FFFFFF;
+        }
+        
+        .mute-button {
+            background-color: #333;
+            border: 1px solid #00ffff;
+            color: #00ffff;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .mute-button.active {
+            background-color: #005f8f;
+        }
+        
+        #loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #000022, #001133);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+        }
+        
+        #loading-text {
+            font-size: 24px;
+            color: #00ffff;
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        #loading-bar-container {
+            width: 300px;
+            height: 20px;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+        
+        #loading-bar {
+            width: 0%;
+            height: 100%;
+            background-color: #00ffff;
+            transition: width 0.3s;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        @keyframes titleGlow {
+            0% { text-shadow: 0 0 5px #00AA00; }
+            50% { text-shadow: 0 0 20px #00AA00, 0 0 30px #00AA00; }
+            100% { text-shadow: 0 0 5px #00AA00; }
+        }
+        
+        @keyframes enterPulse {
+            0% { transform: scale(1); text-shadow: 0 0 5px #00AA00; }
+            50% { transform: scale(1.05); text-shadow: 0 0 15px #00AA00, 0 0 20px #00AA00; }
+            100% { transform: scale(1); text-shadow: 0 0 5px #00AA00; }
+        }
+        
+        /* Stats display */
+        #stats-container {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 400px;
+            padding: 20px;
+            background-color: rgba(0, 30, 60, 0.9);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            z-index: 150;
+        }
+        
+        #stats-title {
+            font-size: 24px;
+            color: #00ffff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #stats-content {
+            color: #d0d0d0;
+            margin-bottom: 20px;
+        }
+        
+        #stats-close {
+            display: block;
+            margin: 0 auto;
+            padding: 8px 20px;
+            background-color: #005f8f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="hud">
+            <div id="timer">Time: 120</div>
+            <div id="artifacts">Artifacts: 0/3</div>
+            <div id="health">Health: 100%</div>
+        </div>
+        <div class="stage-indicator">Stage: 1/3</div>
+        
+        <div id="popup-container">
+            <div id="popup-title">Artifact Collected!</div>
+            <div id="popup-content">
+                Learn about this future skill...
+            </div>
+            <button id="popup-button">Continue</button>
+        </div>
+        
+        <!-- Main Menu -->
+        <div id="menu-screen">
+            <div id="menu-title">FutureskillsArtifact</div>
+            <button class="menu-button" id="start-button">Start Game</button>
+            <button class="menu-button" id="continue-button" style="display: none;">Continue</button>
+            <button class="menu-button" id="settings-button">Settings</button>
+            <button class="menu-button" id="stats-button">Statistics</button>
+            
+            <!-- Settings Panel -->
+            <div id="settings-container">
+                <div class="settings-row">
+                    <span class="settings-label">Sound:</span>
+                    <button class="mute-button" id="mute-button">ON</button>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Difficulty:</span>
+                    <select id="difficulty-select">
+                        <option value="1">Normal</option>
+                        <option value="2">Hard</option>
+                    </select>
+                </div>
+                <div class="settings-row" id="debug-row">
+                    <span class="settings-label">Debug Mode:</span>
+                    <button class="mute-button" id="debug-button">OFF</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Statistics -->
+        <div id="stats-container">
+            <div id="stats-title">Game Statistics</div>
+            <div id="stats-content">
+                No games completed yet.
+            </div>
+            <button id="stats-close">Close</button>
+        </div>
+    </div>
+    
+    <!-- Game Scripts -->
+    <script src="js/utils.js"></script>
+    <script src="js/maze.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/artifacts.js"></script>
+    <script src="js/obstacles.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/popup.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/game.js"></script>
+    
+    <script>
+        // Initialize the game when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for development mode via URL parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const devMode = urlParams.get('dev') === 'true' || urlParams.get('dev') === '1';
+            
+            if (devMode) {
+                console.log('Development mode activated via URL parameter');
+                // Add dev mode indicator
+                const devIndicator = document.createElement('div');
+                devIndicator.style.position = 'fixed';
+                devIndicator.style.top = '5px';
+                devIndicator.style.right = '5px';
+                devIndicator.style.backgroundColor = 'rgba(255, 0, 0, 0.7)';
+                devIndicator.style.color = 'white';
+                devIndicator.style.padding = '5px 10px';
+                devIndicator.style.borderRadius = '5px';
+                devIndicator.style.fontFamily = 'monospace';
+                devIndicator.style.fontSize = '12px';
+                devIndicator.style.zIndex = '2000';
+                devIndicator.textContent = 'DEV MODE';
+                document.body.appendChild(devIndicator);
+            }
+            
+            // Create global audio manager
+            window.audioManager = new AudioManager();
+            
+            // Create popup manager
+            window.popupManager = new PopupManager();
+            
+            // Create and start the game
+            window.gameInstance = new Game();
+            
+            // If in dev mode, enable debug mode automatically
+            if (devMode && window.gameInstance) {
+                window.gameInstance.debugMode = true;
+                
+                // Show debug help after a short delay
+                setTimeout(() => {
+                    if (window.gameInstance.showDebugHelp) {
+                        window.gameInstance.showDebugHelp();
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html> 

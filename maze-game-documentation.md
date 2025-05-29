@@ -374,5 +374,3 @@ Follow these steps to recreate the game from scratch:
    - Fine-tune collision detection
    - Add audio feedback
    - Test across browsers
-
-By following these steps and implementing each component, you'll create a complete maze game with procedural generation, player movement, collectibles, and multiple stages. 

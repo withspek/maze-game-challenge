@@ -1,3 +1,9 @@
+/**
+ *  Maze generation and rendering
+ *  I use Kruskal's algorithm to generate the maze
+ *  and add loops/cycles to make multiple paths (based on difficulty)
+ *  then render the maze using the grid data
+ */
 class Maze {
 	constructor(width, height, cellSize, difficulty = 1) {
 		this.width = width;

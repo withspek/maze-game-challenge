@@ -1,3 +1,7 @@
+/**
+ * Main Game controller class
+ * responsinble for rendering the game and updating the game state
+ */
 class Game {
 	constructor() {
 		this.canvas = document.getElementById("gameCanvas");

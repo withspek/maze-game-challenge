@@ -1,3 +1,9 @@
+/**
+ *  Player class
+ *  responsible for handling player movement and collision detection
+ *  @param {Maze} maze - The maze object
+ *  @param {number} cellSize - The size of the cells in the maze
+ */
 class Player {
 	constructor(maze, cellSize) {
 		const startCell = maze.getRandomEmptyCell();

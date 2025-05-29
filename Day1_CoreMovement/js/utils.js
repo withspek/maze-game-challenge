@@ -4,40 +4,6 @@ const getRandomInt = (min, max) => {
 	return Math.floor(Math.random() * (lmax - lmin + 1)) + lmin;
 };
 
-const generateNoiseTexture = (
-	ctx,
-	width,
-	height,
-	color = "#ffffff",
-	alpha = 0.1,
-) => {
-	const imageData = ctx.createImageData(width, height);
-	const data = imageData.data;
-
-	for (let i = 0; i < data.length; i += 4) {
-		const value = Math.random() * 255;
-
-		const hexToRgb = (hex) => {
-			const bigint = Number.parseInt(hex.slice(1), 16);
-			return {
-				r: (bigint >> 16) & 255,
-				g: (bigint >> 8) & 255,
-				b: bigint & 255,
-			};
-		};
-
-		const rgb = hexToRgb(color);
-
-		data[i] = rgb.r;
-		data[i + 1] = rgb.g;
-		data[i + 2] = rgb.b;
-		data[i + 3] = value * alpha;
-	}
-
-	return imageData;
-};
-
-// Draw rounded rectangle
 const drawRoundedRect = (
 	ctx,
 	x,

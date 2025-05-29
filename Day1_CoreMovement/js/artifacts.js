@@ -1,3 +1,9 @@
+/**
+ *  Artifact rendering and collision detection
+ *  @param {Maze} maze - The maze object
+ *  @param {number} cellSize - The size of the cells in the maze
+ *  @param {string} type - The type of artifact
+ */
 class Artifact {
 	constructor(maze, cellSize, type) {
 		const cell = maze.getRandomEmptyCell();

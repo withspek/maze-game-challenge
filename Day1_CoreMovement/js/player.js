@@ -88,7 +88,6 @@ class Player {
 				this.keys.space = true;
 				if (!this.isJumping) {
 					this.isJumping = true;
-					generateTone(440, 100, 0.2, "square");
 				}
 				e.preventDefault();
 				break;

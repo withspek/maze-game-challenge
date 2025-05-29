@@ -15,6 +15,9 @@ class Maze {
     // Grid representation (2D array)
     this.grid = [];
 
+    // Exit position
+    this.exit = { x: 0, y: 0 };
+
     // Initialize the grid
     this.initializeGrid();
 
@@ -23,6 +26,9 @@ class Maze {
 
     // Add some loops/cycles to make multiple paths (based on difficulty)
     this.addLoops(difficulty);
+
+    // Create exit position - far from start
+    this.createExitPosition();
 
     // Shortest path for debug mode
     this.shortestPath = [];
@@ -237,6 +243,41 @@ class Maze {
     }
   }
 
+  createExitPosition() {
+    // Place exit far away from the start (0,0)
+    // Try to place it in the opposite corner or a far edge
+    const farX = Math.floor(this.cols * 0.8) + getRandomInt(0, Math.floor(this.cols * 0.2) - 1);
+    const farY = Math.floor(this.rows * 0.8) + getRandomInt(0, Math.floor(this.rows * 0.2) - 1);
+    
+    // Make sure it's within bounds
+    this.exit.x = Math.min(farX, this.cols - 1);
+    this.exit.y = Math.min(farY, this.rows - 1);
+  }
+  
+  isExitPosition(x, y) {
+    // Get grid position from pixel coordinates
+    const gridX = Math.floor(x / this.cellSize);
+    const gridY = Math.floor(y / this.cellSize);
+    
+    // Calculate distance from exit
+    const distance = Math.sqrt(
+      Math.pow(gridX - this.exit.x, 2) + 
+      Math.pow(gridY - this.exit.y, 2)
+    );
+    
+    // Check for exact match or close proximity (within 1 cell)
+    const exactMatch = gridX === this.exit.x && gridY === this.exit.y;
+    const closeProximity = distance < 1.2; // Within ~1.2 cells for diagonal approach
+    
+    // Log the check for debugging when the player is close
+    if (distance < 2) {
+      console.log(`Exit check: Player at (${gridX}, ${gridY}), Exit at (${this.exit.x}, ${this.exit.y}), Distance: ${distance.toFixed(2)}`);
+      console.log(`Exit match? ${exactMatch || closeProximity ? "YES" : "NO"}`);
+    }
+    
+    return exactMatch || closeProximity;
+  }
+
   render(ctx, theme) {
     ctx.save();
 
@@ -340,8 +381,116 @@ class Maze {
         }
       }
     }
+    
+    // Draw exit
+    const exitX = this.exit.x * this.cellSize;
+    const exitY = this.exit.y * this.cellSize;
+    
+    // Create outer glow for exit
+    const outerGlow = ctx.createRadialGradient(
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      this.cellSize / 4,
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      this.cellSize * 0.8
+    );
+    
+    outerGlow.addColorStop(0, 'rgba(0, 255, 170, 0.3)');
+    outerGlow.addColorStop(1, 'rgba(0, 255, 170, 0)');
+    
+    ctx.fillStyle = outerGlow;
+    ctx.beginPath();
+    ctx.arc(
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      this.cellSize * 0.8,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw exit marker (portal-like circle)
+    const gradient = ctx.createRadialGradient(
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      2,
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      this.cellSize / 2
+    );
+    
+    gradient.addColorStop(0, '#FFFFFF');
+    gradient.addColorStop(0.4, '#00FFAA');
+    gradient.addColorStop(1, '#007755');
+    
+    // Add glow effect
+    ctx.shadowColor = '#00FFAA';
+    ctx.shadowBlur = 15;
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      this.cellSize / 3,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Add pulsing effect by adding another smaller circle
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.beginPath();
+    
+    // Use time-based animation for the pulse
+    const pulseSize = (Math.sin(Date.now() / 200) + 1) * 5 + 3;
+    
+    ctx.arc(
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      pulseSize,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Add swirling particles around exit
+    this.renderExitParticles(ctx, exitX + this.cellSize / 2, exitY + this.cellSize / 2);
+    
+    // Draw "EXIT" text that floats up and down
+    const textY = exitY - 10 + Math.sin(Date.now() / 500) * 5;
+    ctx.font = 'bold 14px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#00FFAA';
+    ctx.shadowColor = '#FFFFFF';
+    ctx.shadowBlur = 8;
+    ctx.fillText('EXIT', exitX + this.cellSize / 2, textY);
+    
+    // Reset shadow
+    ctx.shadowBlur = 0;
 
     ctx.restore();
+  }
+  
+  // Add method to render particles around the exit
+  renderExitParticles(ctx, x, y) {
+    // Calculate time-based offset for particle animation
+    const time = Date.now() / 1000;
+    
+    // Draw 8 particles circling around the exit
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + time;
+      const radius = this.cellSize * 0.5;
+      const particleX = x + Math.cos(angle) * radius;
+      const particleY = y + Math.sin(angle) * radius;
+      const particleSize = 2 + Math.sin(angle * 3) * 1;
+      
+      ctx.fillStyle = 'rgba(0, 255, 170, 0.7)';
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, particleSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // Find the shortest path between two points using BFS

@@ -4,8 +4,17 @@
 
 class Artifact {
   constructor(maze, cellSize, type) {
-    // Find a random position for the artifact
-    const cell = maze.getRandomEmptyCell();
+    // Find a random position for the artifact that's not on the exit
+    let cell;
+    let isOnExit = true;
+    let attempts = 0;
+    
+    // Try to find a position not on the exit
+    while (isOnExit && attempts < 20) {
+      cell = maze.getRandomEmptyCell();
+      isOnExit = (cell.x === maze.exit.x && cell.y === maze.exit.y);
+      attempts++;
+    }
 
     // Convert grid coordinates to pixel coordinates (center of the cell)
     this.x = (cell.x + 0.5) * cellSize;
@@ -49,6 +58,48 @@ class Artifact {
         this.description =
           "Machine Learning enables systems to learn and improve from experience.";
         this.shape = "sphere";
+        break;
+      case "cloud":
+        this.color = "#00bfff"; // Deep Sky Blue
+        this.name = "Cloud Computing Artifact";
+        this.description =
+          "Cloud Computing provides scalable resources and services over the internet.";
+        this.shape = "cube";
+        break;
+      case "data-science":
+        this.color = "#ff8800"; // Orange
+        this.name = "Data Science Artifact";
+        this.description =
+          "Data Science extracts insights and knowledge from structured and unstructured data.";
+        this.shape = "sphere";
+        break;
+      case "iot":
+        this.color = "#00e6e6"; // Cyan
+        this.name = "IoT Artifact";
+        this.description =
+          "Internet of Things connects devices and enables smart environments.";
+        this.shape = "gem";
+        break;
+      case "blockchain":
+        this.color = "#8a2be2"; // Blue Violet
+        this.name = "Blockchain Artifact";
+        this.description =
+          "Blockchain is a secure, decentralized technology for digital transactions.";
+        this.shape = "cube";
+        break;
+      case "robotics":
+        this.color = "#ff4444"; // Red
+        this.name = "Robotics Artifact";
+        this.description =
+          "Robotics combines engineering and computer science to build intelligent machines.";
+        this.shape = "shield";
+        break;
+      case "quantum-computing":
+        this.color = "#00ffcc"; // Aquamarine
+        this.name = "Quantum Computing Artifact";
+        this.description =
+          "Quantum Computing leverages quantum mechanics to solve complex problems faster.";
+        this.shape = "gem";
         break;
       default:
         this.color = "#00ffff"; // Cyan

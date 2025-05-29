@@ -323,25 +323,38 @@ class ObstacleManager {
     generateObstacles(maze, cellSize, count, difficulty) {
         this.obstacles = [];
         
-        // Obstacle types
-        const obstacleTypes = ['laser', 'spike', 'slowField'];
+        // Get valid empty cells from the maze
+        const emptyCells = [];
+        for (let y = 0; y < maze.rows; y++) {
+            for (let x = 0; x < maze.cols; x++) {
+                // Don't place obstacles in the first few cells or near the exit (if it exists)
+                const isSafeArea = (x < 2 && y < 2);
+                const isNearExit = maze.exit && Math.abs(x - maze.exit.x) < 2 && Math.abs(y - maze.exit.y) < 2;
+                
+                if (!isSafeArea && !isNearExit) {
+                    emptyCells.push({ x, y });
+                }
+            }
+        }
         
-        // Generate random obstacles
-        for (let i = 0; i < count; i++) {
-            // Get a random empty cell in the maze
-            const cell = maze.getRandomEmptyCell();
+        // Randomly shuffle the empty cells
+        for (let i = emptyCells.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [emptyCells[i], emptyCells[j]] = [emptyCells[j], emptyCells[i]];
+        }
+        
+        // Create obstacles
+        const obstacleTypes = ['spike', 'laser', 'slowField'];
+        
+        for (let i = 0; i < Math.min(count, emptyCells.length); i++) {
+            const cell = emptyCells[i];
+            const type = obstacleTypes[i % obstacleTypes.length]; // Cycle through types
             
-            // Choose a random obstacle type
-            const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
-            
-            // Convert grid coordinates to pixel coordinates (center of the cell)
+            // Create obstacle in center of cell
             const x = (cell.x + 0.5) * cellSize;
             const y = (cell.y + 0.5) * cellSize;
             
-            // Create the obstacle
-            const obstacle = new Obstacle(x, y, type, cellSize, difficulty);
-            
-            this.obstacles.push(obstacle);
+            this.obstacles.push(new Obstacle(x, y, type, cellSize, difficulty));
         }
     }
     
@@ -352,13 +365,11 @@ class ObstacleManager {
     }
     
     checkCollisions(player) {
-        // Check each obstacle for collision with the player
         for (const obstacle of this.obstacles) {
-            if (obstacle.checkCollision(player.getCollisionBox())) {
+            if (obstacle.active && obstacle.checkCollision(player.getCollisionBox())) {
                 return obstacle;
             }
         }
-        
         return null;
     }
     
@@ -366,5 +377,53 @@ class ObstacleManager {
         for (const obstacle of this.obstacles) {
             obstacle.render(ctx);
         }
+    }
+    
+    // Add method to render debug information
+    renderDebug(ctx) {
+        ctx.save();
+        
+        // Loop through obstacles and show debug info
+        for (const obstacle of this.obstacles) {
+            // Get obstacle position
+            const x = obstacle.x;
+            const y = obstacle.y;
+            
+            // Draw bounding box
+            ctx.strokeStyle = "#ff0000";
+            ctx.lineWidth = 2;
+            const box = obstacle.getCollisionBox();
+            ctx.strokeRect(box.x, box.y, box.width, box.height);
+            
+            // Draw label above the obstacle
+            ctx.fillStyle = "#ff0000";
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(
+                obstacle.type,
+                x,
+                y - 15
+            );
+            
+            // For damage-dealing obstacles, show damage amount
+            if (obstacle.damageAmount > 0) {
+                ctx.fillText(
+                    `-${obstacle.damageAmount}`,
+                    x,
+                    y - 30
+                );
+            }
+            
+            // For slow fields, show slow factor
+            if (obstacle.type === 'slowField') {
+                ctx.fillText(
+                    `x${obstacle.slowFactor}`,
+                    x,
+                    y - 30
+                );
+            }
+        }
+        
+        ctx.restore();
     }
 } 

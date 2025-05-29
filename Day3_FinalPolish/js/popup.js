@@ -43,6 +43,60 @@ class PopupManager {
                     'Rwanda\'s health system is beginning to implement machine learning for better disease prediction and resource allocation.',
                     'Machine learning is helping Rwanda analyze large datasets to make data-driven policy decisions for economic development.'
                 ]
+            },
+            'cloud': {
+                title: 'Cloud Computing Artifact: Rwanda\'s Digital Infrastructure',
+                content: [
+                    'Rwanda is investing in cloud infrastructure to support e-government and digital services.',
+                    'Cloud computing enables Rwandan startups and businesses to scale quickly and efficiently.',
+                    'The government promotes cloud adoption for secure data storage and disaster recovery.',
+                    'Cloud-based platforms are helping Rwandan schools and universities deliver online education.'
+                ]
+            },
+            'data-science': {
+                title: 'Data Science Artifact: Rwanda\'s Insight Revolution',
+                content: [
+                    'Rwanda is building data science capacity to drive evidence-based policy making.',
+                    'Data science is used in Rwanda to analyze health, education, and economic data for better outcomes.',
+                    'The Rwanda Data Portal provides open data for researchers and entrepreneurs.',
+                    'Data-driven insights are helping Rwanda optimize public transportation and urban planning.'
+                ]
+            },
+            'iot': {
+                title: 'IoT Artifact: Rwanda\'s Connected Future',
+                content: [
+                    'Rwanda is piloting IoT solutions for smart agriculture and livestock monitoring.',
+                    'IoT devices are being used to monitor air and water quality in Rwandan cities.',
+                    'Smart sensors help Rwandan farmers track soil moisture and improve crop yields.',
+                    'IoT is enabling Rwanda to develop smart city infrastructure for improved public services.'
+                ]
+            },
+            'blockchain': {
+                title: 'Blockchain Artifact: Rwanda\'s Trust Technology',
+                content: [
+                    'Rwanda is exploring blockchain for secure land registration and supply chain transparency.',
+                    'Blockchain technology is being used to track minerals and ensure ethical sourcing in Rwanda.',
+                    'The government is studying blockchain for digital identity and secure voting systems.',
+                    'Rwanda\'s tech community is piloting blockchain for financial inclusion and remittances.'
+                ]
+            },
+            'robotics': {
+                title: 'Robotics Artifact: Rwanda\'s Automation Leap',
+                content: [
+                    'Rwanda is introducing robotics in education to inspire the next generation of engineers.',
+                    'Robotics competitions are held in Rwanda to foster innovation and teamwork among students.',
+                    'Rwandan hospitals are exploring robotics for medical procedures and logistics.',
+                    'Robotics is helping Rwanda automate manufacturing and agricultural processes.'
+                ]
+            },
+            'quantum-computing': {
+                title: 'Quantum Computing Artifact: Rwanda\'s Quantum Leap',
+                content: [
+                    'Rwanda is investing in advanced computing research, including quantum technologies.',
+                    'Quantum computing could help Rwanda solve complex problems in logistics and cryptography.',
+                    'Rwandan universities are partnering internationally to build quantum computing expertise.',
+                    'Quantum technologies are seen as a future driver for Rwanda\'s digital transformation.'
+                ]
             }
         };
         

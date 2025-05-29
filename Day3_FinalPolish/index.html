@@ -95,7 +95,6 @@
         text-shadow: 0 0 5px #00ffff;
       }
 
-      /* Updated menu screen styling */
       #menu-screen {
         position: absolute;
         top: 0;
@@ -121,7 +120,25 @@
         animation: titleGlow 2s infinite;
       }
 
-      /* Star animation */
+      .menu-subtitle {
+        color: #FFFFFF;
+        font-size: 18px;
+        margin-bottom: 30px;
+        text-shadow: 0 0 5px #008800;
+      }
+
+      .menu-progress-bar {
+        width: 300px;
+        height: 10px;
+        display: flex;
+        margin-bottom: 40px;
+      }
+
+      .menu-star {
+        position: absolute;
+        animation: twinkle 3s infinite ease-in-out;
+      }
+
       @keyframes twinkle {
         0% {
           opacity: 0.7;
@@ -135,11 +152,6 @@
           opacity: 0.7;
           transform: scale(1) rotate(0deg);
         }
-      }
-
-      .menu-star {
-        position: absolute;
-        animation: twinkle 3s infinite ease-in-out;
       }
 
       .menu-button {
@@ -167,87 +179,14 @@
         animation: enterPulse 1.5s infinite;
       }
 
-      #settings-container {
-        display: none;
-        margin-top: 20px;
-        padding: 10px;
-        border: 1px solid #00ffff;
-        border-radius: 5px;
-        width: 200px;
-        background-color: rgba(0, 30, 60, 0.8);
-      }
-
-      .settings-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 10px 0;
-      }
-
-      .settings-label {
-        color: #ffffff;
-      }
-
-      .mute-button {
-        background-color: #333;
-        border: 1px solid #00ffff;
-        color: #00ffff;
-        padding: 5px 10px;
-        border-radius: 3px;
-        cursor: pointer;
-      }
-
-      .mute-button.active {
-        background-color: #005f8f;
-      }
-
-      #loading-screen {
+      .menu-controls-info {
         position: absolute;
-        top: 0;
+        bottom: 80px;
         left: 0;
         width: 100%;
-        height: 100%;
-        background: linear-gradient(to bottom, #000022, #001133);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 300;
-      }
-
-      #loading-text {
-        font-size: 24px;
-        color: #00ffff;
-        margin-bottom: 20px;
-        animation: pulse 1.5s infinite;
-      }
-
-      #loading-bar-container {
-        width: 300px;
-        height: 20px;
-        border: 2px solid #00ffff;
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-      }
-
-      #loading-bar {
-        width: 0%;
-        height: 100%;
-        background-color: #00ffff;
-        transition: width 0.3s;
-      }
-
-      @keyframes pulse {
-        0% {
-          opacity: 0.6;
-        }
-        50% {
-          opacity: 1;
-        }
-        100% {
-          opacity: 0.6;
-        }
+        text-align: center;
+        color: #FFFFFF;
+        font-size: 16px;
       }
 
       @keyframes titleGlow {
@@ -276,47 +215,6 @@
           text-shadow: 0 0 5px #00aa00;
         }
       }
-
-      /* Stats display */
-      #stats-container {
-        display: none;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 80%;
-        max-width: 400px;
-        padding: 20px;
-        background-color: rgba(0, 30, 60, 0.9);
-        border: 2px solid #00ffff;
-        border-radius: 10px;
-        box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-        z-index: 150;
-      }
-
-      #stats-title {
-        font-size: 24px;
-        color: #00ffff;
-        margin-bottom: 20px;
-        text-align: center;
-      }
-
-      #stats-content {
-        color: #d0d0d0;
-        margin-bottom: 20px;
-      }
-
-      #stats-close {
-        display: block;
-        margin: 0 auto;
-        padding: 8px 20px;
-        background-color: #005f8f;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-family: "Courier New", monospace;
-        cursor: pointer;
-      }
     </style>
   </head>
   <body>
@@ -338,39 +236,32 @@
 
       <!-- Main Menu -->
       <div id="menu-screen">
-        <div id="menu-title">FutureskillsArtifact</div>
-        <button class="menu-button" id="start-button">Start Game</button>
+        <div id="menu-title">FutureskillsArti<span style="color: #00AA00;">★</span>fact</div>
+        <div class="menu-subtitle">RFSF National SKILLS Competition 2025</div>
+        <div class="menu-progress-bar">
+          <div style="flex: 1; height: 100%; background-color: #0088FF; margin-right: 2px;"></div>
+          <div style="flex: 1; height: 100%; background-color: #FFCC00; margin-right: 2px;"></div>
+          <div style="flex: 1; height: 100%; background-color: #00AA00;"></div>
+        </div>
+        <button class="menu-button" id="start-button">Press ENTER to start</button>
         <button class="menu-button" id="continue-button" style="display: none">
           Continue
         </button>
-        <button class="menu-button" id="settings-button">Settings</button>
-        <button class="menu-button" id="stats-button">Statistics</button>
-
-        <!-- Settings Panel -->
-        <div id="settings-container">
-          <div class="settings-row">
-            <span class="settings-label">Sound:</span>
-            <button class="mute-button" id="mute-button">ON</button>
-          </div>
-          <div class="settings-row">
-            <span class="settings-label">Difficulty:</span>
-            <select id="difficulty-select">
-              <option value="1">Normal</option>
-              <option value="2">Hard</option>
-            </select>
-          </div>
-          <div class="settings-row" id="debug-row">
-            <span class="settings-label">Debug Mode:</span>
-            <button class="mute-button" id="debug-button">OFF</button>
-          </div>
+        
+        <!-- Menu Stars -->
+        <div class="menu-star" style="top: 40px; left: 480px; font-size: 30px; color: #00AA00;">★</div>
+        <div class="menu-star" style="top: 150px; right: 80px; font-size: 25px; color: #FFFF00;">★</div>
+        <div class="menu-star" style="top: 200px; left: 60px; font-size: 20px; color: #0088FF;">★</div>
+        <div class="menu-star" style="bottom: 100px; right: 150px; font-size: 22px; color: #00FFFF;">★</div>
+        <div class="menu-star" style="bottom: 150px; left: 180px; font-size: 28px; color: #FFCC00;">★</div>
+        
+        <!-- Controls Info -->
+        <div class="menu-controls-info">
+          <div style="margin-bottom: 5px;">Controls:</div>
+          <div>Arrow keys - Move</div>
+          <div>Spacebar - Jump</div>
+          <div>ESC - Pause</div>
         </div>
-      </div>
-
-      <!-- Game Statistics -->
-      <div id="stats-container">
-        <div id="stats-title">Game Statistics</div>
-        <div id="stats-content">No games completed yet.</div>
-        <button id="stats-close">Close</button>
       </div>
     </div>
 
@@ -388,29 +279,6 @@
     <script>
       // Initialize the game when the page loads
       document.addEventListener("DOMContentLoaded", function () {
-        // Check for development mode via URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const devMode =
-          urlParams.get("dev") === "true" || urlParams.get("dev") === "1";
-
-        if (devMode) {
-          console.log("Development mode activated via URL parameter");
-          // Add dev mode indicator
-          const devIndicator = document.createElement("div");
-          devIndicator.style.position = "fixed";
-          devIndicator.style.top = "5px";
-          devIndicator.style.right = "5px";
-          devIndicator.style.backgroundColor = "rgba(255, 0, 0, 0.7)";
-          devIndicator.style.color = "white";
-          devIndicator.style.padding = "5px 10px";
-          devIndicator.style.borderRadius = "5px";
-          devIndicator.style.fontFamily = "monospace";
-          devIndicator.style.fontSize = "12px";
-          devIndicator.style.zIndex = "2000";
-          devIndicator.textContent = "DEV MODE";
-          document.body.appendChild(devIndicator);
-        }
-
         // Create global audio manager
         window.audioManager = new AudioManager();
 
@@ -419,18 +287,6 @@
 
         // Create and start the game
         window.gameInstance = new Game();
-
-        // If in dev mode, enable debug mode automatically
-        if (devMode && window.gameInstance) {
-          window.gameInstance.debugMode = true;
-
-          // Show debug help after a short delay
-          setTimeout(() => {
-            if (window.gameInstance.showDebugHelp) {
-              window.gameInstance.showDebugHelp();
-            }
-          }, 1000);
-        }
       });
     </script>
   </body>

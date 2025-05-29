@@ -15,6 +15,9 @@ class Maze {
     // Grid representation (2D array)
     this.grid = [];
 
+    // Exit position
+    this.exit = { x: 0, y: 0 };
+
     // Initialize the grid
     this.initializeGrid();
 
@@ -23,6 +26,9 @@ class Maze {
 
     // Add some loops/cycles to make multiple paths (based on difficulty)
     this.addLoops(difficulty);
+    
+    // Create exit position - far from start
+    this.createExitPosition();
   }
 
   initializeGrid() {
@@ -209,73 +215,126 @@ class Maze {
     return this.grid[gridY][gridX].walls[direction];
   }
 
+  createExitPosition() {
+    // Place exit far away from the start (0,0)
+    // Try to place it in the opposite corner or a far edge
+    const farX = Math.floor(this.cols * 0.8) + getRandomInt(0, Math.floor(this.cols * 0.2) - 1);
+    const farY = Math.floor(this.rows * 0.8) + getRandomInt(0, Math.floor(this.rows * 0.2) - 1);
+    
+    // Make sure it's within bounds
+    this.exit.x = Math.min(farX, this.cols - 1);
+    this.exit.y = Math.min(farY, this.rows - 1);
+  }
+  
+  isExitPosition(x, y) {
+    // Check if the given grid position is the exit
+    const gridX = Math.floor(x / this.cellSize);
+    const gridY = Math.floor(y / this.cellSize);
+    return gridX === this.exit.x && gridY === this.exit.y;
+  }
+
   render(ctx) {
-    ctx.save();
-
-    // Set the wall color
-    ctx.strokeStyle = "#00ffff";
+    // Draw the maze walls
+    ctx.strokeStyle = '#00ffff';
     ctx.lineWidth = 2;
-
+    
     // Render each cell
     for (let y = 0; y < this.rows; y++) {
       for (let x = 0; x < this.cols; x++) {
         const cell = this.grid[y][x];
         const cellX = x * this.cellSize;
         const cellY = y * this.cellSize;
-
-        // Draw the walls
-        if (cell.walls[0]) {
-          // Top
+        
+        // Draw cell walls
+        if (cell.walls[0]) { // Top wall
           ctx.beginPath();
           ctx.moveTo(cellX, cellY);
           ctx.lineTo(cellX + this.cellSize, cellY);
           ctx.stroke();
         }
-
-        if (cell.walls[1]) {
-          // Right
+        
+        if (cell.walls[1]) { // Right wall
           ctx.beginPath();
           ctx.moveTo(cellX + this.cellSize, cellY);
           ctx.lineTo(cellX + this.cellSize, cellY + this.cellSize);
           ctx.stroke();
         }
-
-        if (cell.walls[2]) {
-          // Bottom
+        
+        if (cell.walls[2]) { // Bottom wall
           ctx.beginPath();
           ctx.moveTo(cellX, cellY + this.cellSize);
           ctx.lineTo(cellX + this.cellSize, cellY + this.cellSize);
           ctx.stroke();
         }
-
-        if (cell.walls[3]) {
-          // Left
+        
+        if (cell.walls[3]) { // Left wall
           ctx.beginPath();
           ctx.moveTo(cellX, cellY);
           ctx.lineTo(cellX, cellY + this.cellSize);
           ctx.stroke();
         }
-
-        // Draw floor pattern (subtle grid)
-        ctx.fillStyle = "#001122";
-        ctx.fillRect(
-          cellX + 1,
-          cellY + 1,
-          this.cellSize - 2,
-          this.cellSize - 2
-        );
-
-        // Add some subtle floor detail
-        ctx.fillStyle = "#002233";
-        ctx.fillRect(
-          cellX + this.cellSize * 0.25,
-          cellY + this.cellSize * 0.25,
-          this.cellSize * 0.5,
-          this.cellSize * 0.5
-        );
       }
     }
-
-    ctx.restore();
+    
+    // Draw exit
+    const exitX = this.exit.x * this.cellSize;
+    const exitY = this.exit.y * this.cellSize;
+    
+    // Draw exit marker (portal-like circle)
+    const gradient = ctx.createRadialGradient(
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      2,
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      this.cellSize / 2
+    );
+    
+    gradient.addColorStop(0, '#FFFFFF');
+    gradient.addColorStop(0.4, '#00FFAA');
+    gradient.addColorStop(1, '#007755');
+    
+    // Add glow effect
+    ctx.shadowColor = '#00FFAA';
+    ctx.shadowBlur = 15;
+    
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      this.cellSize / 3,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Add pulsing effect by adding another smaller circle
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.beginPath();
+    
+    // Use time-based animation for the pulse
+    const pulseSize = (Math.sin(Date.now() / 200) + 1) * 5 + 3;
+    
+    ctx.arc(
+      exitX + this.cellSize / 2,
+      exitY + this.cellSize / 2,
+      pulseSize,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
+    
+    // Draw "EXIT" text that floats up and down
+    const textY = exitY - 10 + Math.sin(Date.now() / 500) * 5;
+    ctx.font = 'bold 14px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#00FFAA';
+    ctx.shadowColor = '#FFFFFF';
+    ctx.shadowBlur = 8;
+    ctx.fillText('EXIT', exitX + this.cellSize / 2, textY);
+    
+    // Reset shadow
+    ctx.shadowBlur = 0;
   }
 }

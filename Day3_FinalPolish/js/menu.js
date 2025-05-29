@@ -37,9 +37,8 @@ class MenuSystem {
             debugMode: false // Debug mode setting
         };
         
-        // Stars for decoration
-        this.stars = [];
-        this.createStars();
+        // Stars for decoration - these are now in the HTML directly
+        this.stars = document.querySelectorAll('.menu-star');
         
         // Initialize
         this.setupEventListeners();
@@ -50,12 +49,9 @@ class MenuSystem {
         // Apply the new design to the menu screen
         this.applyMenuDesign();
         
-        // Show menu screen and hide loading screen after a short delay
-        setTimeout(() => {
-            this.hideLoadingScreen();
-            this.showMenuScreen();
-            this.animateStars();
-        }, 500);
+        // Show menu screen immediately
+        this.showMenuScreen();
+        this.animateStars();
         
         // Check if we're in development mode
         this.checkDevelopmentMode();
@@ -150,33 +146,6 @@ class MenuSystem {
         this.menuScreen.appendChild(controlsInfo);
     }
     
-    createStars() {
-        // Create star elements for decoration
-        const starColors = ['#FFFF00', '#00FFFF', '#0088FF'];
-        const starPositions = [
-            { top: '40px', left: '480px', size: '30px', color: '#00AA00' },
-            { top: '150px', right: '80px', size: '25px', color: '#FFFF00' },
-            { top: '200px', left: '60px', size: '20px', color: '#0088FF' }
-        ];
-        
-        starPositions.forEach((pos, index) => {
-            const star = document.createElement('div');
-            star.classList.add('menu-star');
-            star.style.position = 'absolute';
-            star.style.fontSize = pos.size;
-            star.style.color = pos.color;
-            star.style.top = pos.top;
-            if (pos.left) star.style.left = pos.left;
-            if (pos.right) star.style.right = pos.right;
-            star.style.textShadow = `0 0 10px ${pos.color}`;
-            star.innerHTML = '★';
-            star.style.transform = 'rotate(0deg)';
-            star.style.transition = 'transform 0.5s ease-in-out';
-            this.menuScreen.appendChild(star);
-            this.stars.push(star);
-        });
-    }
-    
     animateStars() {
         // Animate stars with subtle rotation and pulsing
         this.stars.forEach((star, index) => {
@@ -208,39 +177,6 @@ class MenuSystem {
             this.continueGame();
         });
         
-        // Settings button
-        this.settingsButton.addEventListener('click', () => {
-            this.toggleSettings();
-        });
-        
-        // Stats button
-        this.statsButton.addEventListener('click', () => {
-            this.showStats();
-        });
-        
-        // Stats close button
-        this.statsCloseButton.addEventListener('click', () => {
-            this.hideStats();
-        });
-        
-        // Mute button
-        this.muteButton.addEventListener('click', () => {
-            this.toggleMute();
-        });
-        
-        // Difficulty select
-        this.difficultySelect.addEventListener('change', () => {
-            this.settings.difficulty = parseInt(this.difficultySelect.value);
-            this.saveSettings();
-        });
-        
-        // Debug button
-        if (this.debugButton) {
-            this.debugButton.addEventListener('click', () => {
-                this.toggleDebugMode();
-            });
-        }
-        
         // Add keyboard support for ENTER key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && this.menuScreen.style.display !== 'none') {
@@ -250,114 +186,60 @@ class MenuSystem {
     }
     
     startGame() {
-        // Show loading screen
-        this.showLoadingScreen();
-        
         // Initialize audio if available right away
         if (typeof audioManager !== 'undefined' && !audioManager.initialized) {
             try {
                 audioManager.init();
-                
-                // Apply mute setting
-                if (this.settings.muted) {
-                    audioManager.toggleMute();
-                }
             } catch (e) {
                 console.error('Failed to initialize audio:', e);
                 // Continue even if audio fails
             }
         }
         
-        // Simulate loading process with a shorter timeout
-        let progress = 0;
-        const loadingInterval = setInterval(() => {
-            progress += 10; // Increase speed
-            this.updateLoadingProgress(progress);
+        try {
+            // Hide menu screen
+            this.hideMenuScreen();
             
-            if (progress >= 100) {
-                clearInterval(loadingInterval);
-                
-                try {
-                    // Hide menus - do this BEFORE starting the game
-                    this.hideMenuScreen();
-                    
-                    // Use setTimeout to ensure the UI updates before starting the game
-                    setTimeout(() => {
-                        // Start new game with current settings
-                        if (this.game) {
-                            this.game.difficulty = this.settings.difficulty;
-                            this.game.startNewGame();
-                            
-                            // Hide loading screen after game has started
-                            setTimeout(() => {
-                                this.hideLoadingScreen();
-                            }, 100);
-                        } else {
-                            console.error("Game instance not available");
-                            this.handleLoadingError();
-                        }
-                    }, 50);
-                } catch (error) {
-                    console.error("Error starting game:", error);
-                    this.handleLoadingError();
-                }
+            // Start new game with current settings
+            if (this.game) {
+                this.game.difficulty = this.settings.difficulty;
+                this.game.startNewGame();
+            } else {
+                console.error("Game instance not available");
+                this.handleLoadingError();
             }
-        }, 30); // Faster loading
+        } catch (error) {
+            console.error("Error starting game:", error);
+            this.handleLoadingError();
+        }
     }
     
     continueGame() {
-        // Show loading screen
-        this.showLoadingScreen();
-        
         // Initialize audio if available right away
         if (typeof audioManager !== 'undefined' && !audioManager.initialized) {
             try {
                 audioManager.init();
-                
-                // Apply mute setting
-                if (this.settings.muted) {
-                    audioManager.toggleMute();
-                }
             } catch (e) {
                 console.error('Failed to initialize audio:', e);
                 // Continue even if audio fails
             }
         }
         
-        // Simulate loading process with a shorter timeout
-        let progress = 0;
-        const loadingInterval = setInterval(() => {
-            progress += 10; // Increase speed
-            this.updateLoadingProgress(progress);
+        try {
+            // Hide menu screen
+            this.hideMenuScreen();
             
-            if (progress >= 100) {
-                clearInterval(loadingInterval);
-                
-                try {
-                    // Hide menus - do this BEFORE starting the game
-                    this.hideMenuScreen();
-                    
-                    // Use setTimeout to ensure the UI updates before continuing the game
-                    setTimeout(() => {
-                        // Continue game with saved state
-                        if (this.game) {
-                            this.game.loadSavedGame();
-                            
-                            // Hide loading screen after game has loaded
-                            setTimeout(() => {
-                                this.hideLoadingScreen();
-                            }, 100);
-                        } else {
-                            console.error("Game instance not available");
-                            this.handleLoadingError();
-                        }
-                    }, 50);
-                } catch (error) {
-                    console.error("Error continuing game:", error);
-                    this.handleLoadingError();
-                }
+            // Continue game with saved state
+            if (this.game) {
+                this.game.loadSavedGame();
+            } else {
+                console.error("Game instance not available");
+                this.handleLoadingError();
             }
-        }, 30); // Faster loading
+        } catch (error) {
+            console.error("Error continuing game:", error);
+            this.handleLoadingError();
+        }
     }
     
     toggleSettings() {
@@ -433,80 +315,19 @@ class MenuSystem {
     }
     
     showLoadingScreen() {
-        if (this.loadingScreen) {
-            this.loadingScreen.style.display = 'flex';
-            this.updateLoadingProgress(0); // Reset progress
-        } else {
-            // Create loading screen if it doesn't exist
-            this.createLoadingScreen();
-            this.showLoadingScreen();
-        }
+      
+        console.log("Loading screen functionality has been removed");
     }
     
     hideLoadingScreen() {
-        if (this.loadingScreen) {
-            this.loadingScreen.style.display = 'none';
-        }
+        
     }
     
     createLoadingScreen() {
-        // Check if loading screen already exists
-        this.loadingScreen = document.getElementById('loading-screen');
-        if (!this.loadingScreen) {
-            // Create loading screen elements
-            this.loadingScreen = document.createElement('div');
-            this.loadingScreen.id = 'loading-screen';
-            this.loadingScreen.style.position = 'absolute';
-            this.loadingScreen.style.top = '0';
-            this.loadingScreen.style.left = '0';
-            this.loadingScreen.style.width = '100%';
-            this.loadingScreen.style.height = '100%';
-            this.loadingScreen.style.background = 'linear-gradient(to bottom, #000022, #001133)';
-            this.loadingScreen.style.display = 'flex';
-            this.loadingScreen.style.flexDirection = 'column';
-            this.loadingScreen.style.justifyContent = 'center';
-            this.loadingScreen.style.alignItems = 'center';
-            this.loadingScreen.style.zIndex = '300';
-            
-            const loadingText = document.createElement('div');
-            loadingText.id = 'loading-text';
-            loadingText.textContent = 'Generating Labyrinth...';
-            loadingText.style.fontSize = '24px';
-            loadingText.style.color = '#00ffff';
-            loadingText.style.marginBottom = '20px';
-            loadingText.style.animation = 'pulse 1.5s infinite';
-            
-            const loadingBarContainer = document.createElement('div');
-            loadingBarContainer.id = 'loading-bar-container';
-            loadingBarContainer.style.width = '300px';
-            loadingBarContainer.style.height = '20px';
-            loadingBarContainer.style.border = '2px solid #00ffff';
-            loadingBarContainer.style.borderRadius = '10px';
-            loadingBarContainer.style.overflow = 'hidden';
-            loadingBarContainer.style.boxShadow = '0 0 10px rgba(0, 255, 255, 0.5)';
-            
-            this.loadingBar = document.createElement('div');
-            this.loadingBar.id = 'loading-bar';
-            this.loadingBar.style.width = '0%';
-            this.loadingBar.style.height = '100%';
-            this.loadingBar.style.backgroundColor = '#00ffff';
-            this.loadingBar.style.transition = 'width 0.3s';
-            
-            loadingBarContainer.appendChild(this.loadingBar);
-            this.loadingScreen.appendChild(loadingText);
-            this.loadingScreen.appendChild(loadingBarContainer);
-            
-            document.getElementById('game-container').appendChild(this.loadingScreen);
-        }
+        console.log("Loading screen functionality has been removed");
     }
     
     updateLoadingProgress(percent) {
-        if (this.loadingBar) {
-            this.loadingBar.style.width = percent + '%';
-            console.log("Loading progress: " + percent + "%");
-        } else {
-            console.error("Loading bar element not found");
-        }
     }
     
     saveSettings() {
@@ -557,8 +378,7 @@ class MenuSystem {
     
     // Add a method to handle loading errors
     handleLoadingError() {
-        // Hide loading screen and show menu again
-        this.hideLoadingScreen();
+        // Show menu again
         this.showMenuScreen();
         
         // Display an error message

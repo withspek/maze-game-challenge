@@ -17,28 +17,28 @@ class PopupManager {
 			ai: {
 				title: "AI Artifact",
 				content: [
-					"Artificial Intelligence (AI) refers to computer systems that can perform tasks that typically require human intelligence.",
-					"Modern AI systems use techniques like deep learning to analyze vast amounts of data and make predictions or decisions.",
-					"AI applications include voice assistants, recommendation systems, autonomous vehicles, and medical diagnosis.",
-					"The field of AI continues to evolve rapidly, with new breakthroughs happening frequently.",
+					"Artificial Intelligence mimics human thinking by recognizing patterns in data. Just like how you learn to recognize faces, AI learns to identify patterns in images, text, or numbers.",
+					"Machine learning is AI's way of improving through practice. When you show an AI thousands of photos labeled 'cat' or 'dog', it learns the differences and can classify new photos correctly.",
+					"Neural networks are inspired by how brain cells connect. Multiple layers of artificial 'neurons' process information, with each layer learning increasingly complex features from simple to sophisticated.",
+					"AI algorithms make decisions by calculating probabilities. They evaluate multiple options and choose the one most likely to achieve the desired outcome based on their training data.",
 				],
 			},
 			cybersecurity: {
 				title: "Cybersecurity Artifact",
 				content: [
-					"Cybersecurity is the practice of protecting systems, networks, and programs from digital attacks.",
-					"Common cyberattacks include malware, phishing, ransomware, and distributed denial-of-service (DDoS) attacks.",
-					"Key cybersecurity principles include confidentiality, integrity, and availability (the CIA triad).",
-					"As technology advances, cybersecurity professionals must constantly update their skills to combat new threats.",
+					"Cybersecurity works like a castle's defense system with multiple protective layers. Firewalls act as walls, antivirus as guards, and encryption as secret codes that only authorized people can read.",
+					"Authentication verifies identity through something you know (password), something you have (phone), or something you are (fingerprint). Multi-factor authentication combines these for stronger security.",
+					"Encryption transforms readable information into scrambled code using mathematical algorithms. Only those with the correct 'key' can unscramble and read the original message.",
+					"Threat detection uses pattern recognition to identify suspicious behavior. Just like how you notice when someone acts unusually, security systems flag activities that don't match normal patterns.",
 				],
 			},
 			"machine-learning": {
 				title: "Machine Learning Artifact",
 				content: [
-					"Machine Learning is a subset of AI that enables systems to learn and improve from experience.",
-					"ML algorithms build mathematical models based on sample data (training data) to make predictions.",
-					"Types of ML include supervised learning, unsupervised learning, and reinforcement learning.",
-					"ML powers many modern technologies including image recognition, natural language processing, and predictive analytics.",
+					"Supervised learning teaches algorithms using labeled examples, like showing a child pictures of animals with their names. The algorithm learns to predict labels for new, unseen data.",
+					"Unsupervised learning finds hidden patterns in data without labels, similar to organizing a messy room by grouping similar items together without being told what categories to use.",
+					"Reinforcement learning trains algorithms through trial and error with rewards and penalties, like teaching someone to play chess by giving points for good moves and deducting for bad ones.",
+					"Feature engineering involves selecting and transforming the most important characteristics of data, like choosing which measurements of a plant (height, leaf color, stem thickness) best predict its species.",
 				],
 			},
 		};

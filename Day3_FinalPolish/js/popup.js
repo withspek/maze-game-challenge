@@ -40,15 +40,6 @@ class PopupManager {
 					"Feature engineering involves selecting and transforming the most important characteristics of data, like choosing which measurements of a plant (height, leaf color, stem thickness) best predict its species.",
 				],
 			},
-			cloud: {
-				title: "Cloud Computing Artifact",
-				content: [
-					"Cloud computing delivers computing resources over the internet like utilities deliver electricity. Instead of owning servers, you rent computing power, storage, and software when needed.",
-					"Scalability in cloud computing works like an accordion - resources automatically expand during high demand and contract when demand decreases, ensuring optimal performance and cost efficiency.",
-					"Virtualization creates multiple virtual computers within one physical machine, like dividing a large apartment into smaller units. Each virtual machine operates independently with its own operating system.",
-					"Cloud service models include Infrastructure (IaaS - rent the hardware), Platform (PaaS - rent the development environment), and Software (SaaS - rent the complete application).",
-				],
-			},
 			"data-science": {
 				title: "Data Science Artifact",
 				content: [
@@ -76,31 +67,12 @@ class PopupManager {
 					"Smart contracts are self-executing agreements with terms written in code. They automatically enforce rules and execute transactions when predetermined conditions are met, eliminating intermediaries.",
 				],
 			},
-			robotics: {
-				title: "Robotics Artifact",
-				content: [
-					"Robotics combines mechanical engineering (the body), electrical engineering (the nervous system), and computer science (the brain) to create machines that can perform tasks autonomously.",
-					"Robotic sensors provide environmental awareness through cameras (vision), microphones (hearing), and touch sensors (feeling). This sensory input helps robots understand and navigate their surroundings.",
-					"Actuators are robotic 'muscles' that convert electrical signals into physical movement. Motors, hydraulics, and pneumatics power different types of motion depending on strength and precision requirements.",
-					"Robot programming involves breaking complex tasks into simple, sequential steps that machines can execute. Algorithms control decision-making, movement planning, and responses to environmental changes.",
-				],
-			},
-			"quantum-computing": {
-				title: "Quantum Computing Artifact",
-				content: [
-					"Quantum computing uses quantum mechanical properties to process information differently than classical computers. While classical bits are either 0 or 1, quantum bits (qubits) can exist in multiple states simultaneously.",
-					"Superposition allows qubits to be in multiple states at once, like a spinning coin that's both heads and tails until it lands. This enables quantum computers to explore many solutions simultaneously.",
-					"Quantum entanglement creates mysterious connections between qubits where measuring one instantly affects another, regardless of distance. This property enables powerful parallel processing capabilities.",
-					"Quantum algorithms solve specific problems exponentially faster than classical methods by leveraging quantum properties. However, they require specialized programming approaches and are limited to certain problem types.",
-				],
-			},
 		};
 
 		this.init();
 	}
 
 	init() {
-		// Set up continue button event listener
 		this.button.addEventListener("click", () => {
 			this.hide();
 

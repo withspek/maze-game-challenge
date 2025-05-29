@@ -488,11 +488,6 @@ class Game {
 					// Play collection sound
 					if (this.hasAudio) {
 						audioManager.playCollectSound();
-					} else {
-						generateTone(880, 200, 0.3, "sine");
-						setTimeout(() => {
-							generateTone(1320, 200, 0.3, "sine");
-						}, 200);
 					}
 
 					// Show educational popup
@@ -1520,10 +1515,6 @@ class Game {
 
 		if (this.showAllArtifacts && this.maze && this.artifacts) {
 			this.maze.renderArtifactPositions(this.ctx, this.artifacts);
-		}
-
-		if (this.showObstacles && this.obstacleManager) {
-			this.obstacleManager.renderDebug(this.ctx);
 		}
 
 		this.renderGridOverlay();

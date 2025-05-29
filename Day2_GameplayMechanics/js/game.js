@@ -288,10 +288,6 @@ class Game {
 
 		this.player.render(this.ctx);
 
-		if (this.debugMode) {
-			this.obstacleManager.renderDebug(this.ctx);
-		}
-
 		this.ctx.restore();
 
 		this.renderTimerBar();

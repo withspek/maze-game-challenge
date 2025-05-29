@@ -148,7 +148,6 @@ const saveGameState = (state) => {
 	}
 };
 
-// Load game state from localStorage
 const loadGameState = () => {
 	try {
 		const state = localStorage.getItem("futureskillsArtifact");
@@ -159,7 +158,6 @@ const loadGameState = () => {
 	}
 };
 
-// Create particles at a position
 const createParticles = (
 	count,
 	x,
@@ -193,7 +191,6 @@ const createParticles = (
 	return particles;
 };
 
-// Check if a collision box is valid
 const isValidCollisionBox = (box) => {
 	return (
 		box &&
@@ -204,38 +201,4 @@ const isValidCollisionBox = (box) => {
 		box.width > 0 &&
 		box.height > 0
 	);
-};
-
-// Generate a simple audio tone
-const generateTone = (frequency, duration, volume, type) => {
-	try {
-		// Create audio context
-		const AudioContext = window.AudioContext || window.webkitAudioContext;
-		const context = new AudioContext();
-
-		// Create oscillator
-		const oscillator = context.createOscillator();
-		oscillator.type = type || "sine"; // sine, square, sawtooth, triangle
-		oscillator.frequency.value = frequency;
-
-		// Create gain node (for volume)
-		const gainNode = context.createGain();
-		gainNode.gain.value = volume || 0.1;
-
-		// Connect the nodes
-		oscillator.connect(gainNode);
-		gainNode.connect(context.destination);
-
-		// Start and stop the tone
-		oscillator.start();
-		setTimeout(() => {
-			oscillator.stop();
-			context.close();
-		}, duration);
-
-		return true;
-	} catch (error) {
-		console.error("Error generating tone:", error);
-		return false;
-	}
 };

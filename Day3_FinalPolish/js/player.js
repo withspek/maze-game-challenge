@@ -34,7 +34,7 @@ class Player {
 		this.invulnerable = false;
 		this.invulnerableTimer = 0;
 		this.invulnerableDuration = 60; // 1 second at 60 FPS
-		this.isDead = false; // Add death state flag
+		this.isDead = false;
 
 		// Effects
 		this.effects = {
@@ -120,11 +120,6 @@ class Player {
 					// Play jump sound if audio manager is available
 					if (typeof audioManager !== "undefined") {
 						audioManager.playJumpSound();
-					} else {
-						// Fallback to simple tone if no audio manager
-						if (typeof generateTone === "function") {
-							generateTone(440, 100, 0.2, "square");
-						}
 					}
 				}
 				e.preventDefault();

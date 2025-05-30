@@ -2,7 +2,6 @@
  * Obstacles system
  * Handles traps, hazards, and other obstacles in the maze
  */
-
 class Obstacle {
 	constructor(x, y, type, cellSize, difficulty = 1) {
 		this.x = x;
@@ -11,11 +10,9 @@ class Obstacle {
 		this.cellSize = cellSize;
 		this.difficulty = difficulty;
 
-		// Set size based on cell size
 		this.width = cellSize * 0.8;
 		this.height = cellSize * 0.8;
 
-		// Animation properties
 		this.frameCount = 0;
 		this.active = true;
 		this.setupObstacleType();

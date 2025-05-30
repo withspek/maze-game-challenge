@@ -2,7 +2,6 @@
  * Menu system
  * Handles main menu, settings, statistics and loading screens
  */
-
 class MenuSystem {
 	constructor(gameInstance) {
 		this.game = gameInstance;

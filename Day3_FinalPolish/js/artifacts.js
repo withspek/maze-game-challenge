@@ -6,12 +6,10 @@
  */
 class Artifact {
 	constructor(maze, cellSize, type) {
-		// Find a random position for the artifact that's not on the exit
 		let cell;
 		let isOnExit = true;
 		let attempts = 0;
-
-		// Try to find a position not on the exit
+		
 		while (isOnExit && attempts < 20) {
 			cell = maze.getRandomEmptyCell();
 			isOnExit = cell.x === maze.exit.x && cell.y === maze.exit.y;
@@ -26,15 +24,11 @@ class Artifact {
 		this.height = cellSize * 0.4;
 		this.collected = false;
 		this.type = type;
-
-		// Animation properties
 		this.hoverOffset = 0;
 		this.hoverDir = 1;
 		this.rotationAngle = 0;
 		this.glowIntensity = 0;
 		this.frameCount = 0;
-
-		// Artifact-specific properties based on type
 		this.setupArtifactType();
 	}
 
@@ -61,13 +55,6 @@ class Artifact {
 					"Machine Learning enables systems to learn and improve from experience.";
 				this.shape = "sphere";
 				break;
-			case "cloud":
-				this.color = "#00bfff"; // Deep Sky Blue
-				this.name = "Cloud Computing Artifact";
-				this.description =
-					"Cloud Computing provides scalable resources and services over the internet.";
-				this.shape = "cube";
-				break;
 			case "data-science":
 				this.color = "#ff8800"; // Orange
 				this.name = "Data Science Artifact";
@@ -89,20 +76,7 @@ class Artifact {
 					"Blockchain is a secure, decentralized technology for digital transactions.";
 				this.shape = "cube";
 				break;
-			case "robotics":
-				this.color = "#ff4444"; // Red
-				this.name = "Robotics Artifact";
-				this.description =
-					"Robotics combines engineering and computer science to build intelligent machines.";
-				this.shape = "shield";
-				break;
-			case "quantum-computing":
-				this.color = "#00ffcc"; // Aquamarine
-				this.name = "Quantum Computing Artifact";
-				this.description =
-					"Quantum Computing leverages quantum mechanics to solve complex problems faster.";
-				this.shape = "gem";
-				break;
+		
 			default:
 				this.color = "#00ffff"; // Cyan
 				this.name = "Future Skills Artifact";
@@ -276,8 +250,6 @@ class Artifact {
 
 	drawSphere(ctx) {
 		const radius = this.width * 0.5;
-
-		// Create gradient for sphere effect
 		const gradient = ctx.createRadialGradient(
 			-radius * 0.3,
 			-radius * 0.3,

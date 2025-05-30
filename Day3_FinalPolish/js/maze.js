@@ -279,11 +279,9 @@ class Maze {
 				const cellX = x * this.cellSize;
 				const cellY = y * this.cellSize;
 
-				// Draw cell floor
 				ctx.fillStyle = floorColor;
 				ctx.fillRect(cellX, cellY, this.cellSize, this.cellSize);
 
-				// Add floor details (grid pattern)
 				ctx.strokeStyle = floorDetailColor;
 				ctx.lineWidth = 0.5;
 
@@ -361,12 +359,9 @@ class Maze {
 				}
 			}
 		}
-
-		// Draw exit
 		const exitX = this.exit.x * this.cellSize;
 		const exitY = this.exit.y * this.cellSize;
 
-		// Create outer glow for exit
 		const outerGlow = ctx.createRadialGradient(
 			exitX + this.cellSize / 2,
 			exitY + this.cellSize / 2,
@@ -390,7 +385,6 @@ class Maze {
 		);
 		ctx.fill();
 
-		// Draw exit marker (portal-like circle)
 		const gradient = ctx.createRadialGradient(
 			exitX + this.cellSize / 2,
 			exitY + this.cellSize / 2,
@@ -404,7 +398,6 @@ class Maze {
 		gradient.addColorStop(0.4, "#00FFAA");
 		gradient.addColorStop(1, "#007755");
 
-		// Add glow effect
 		ctx.shadowColor = "#00FFAA";
 		ctx.shadowBlur = 15;
 
@@ -419,11 +412,9 @@ class Maze {
 		);
 		ctx.fill();
 
-		// Add pulsing effect by adding another smaller circle
 		ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
 		ctx.beginPath();
 
-		// Use time-based animation for the pulse
 		const pulseSize = (Math.sin(Date.now() / 200) + 1) * 5 + 3;
 
 		ctx.arc(
@@ -435,7 +426,6 @@ class Maze {
 		);
 		ctx.fill();
 
-		// Add swirling particles around exit
 		this.renderExitParticles(
 			ctx,
 			exitX + this.cellSize / 2,
@@ -451,15 +441,12 @@ class Maze {
 		ctx.shadowBlur = 8;
 		ctx.fillText("EXIT", exitX + this.cellSize / 2, textY);
 
-		// Reset shadow
 		ctx.shadowBlur = 0;
 
 		ctx.restore();
 	}
 
-	// Add method to render particles around the exit
 	renderExitParticles(ctx, x, y) {
-		// Calculate time-based offset for particle animation
 		const time = Date.now() / 1000;
 
 		// Draw 8 particles circling around the exit
@@ -477,9 +464,7 @@ class Maze {
 		}
 	}
 
-	// Find the shortest path between two points using BFS
 	findShortestPath(startX, startY, endX, endY) {
-		// Convert game coordinates to grid coordinates
 		const lstartX = Math.floor(startX / this.cellSize);
 		const lstartY = Math.floor(startY / this.cellSize);
 		const lendX = Math.floor(endX / this.cellSize);
@@ -542,7 +527,6 @@ class Maze {
 					const hasWall = this.grid[current.y][current.x].walls[dir.wall];
 
 					if (!hasWall) {
-						// Add neighbor to queue
 						visited.add(key);
 						queue.push({
 							x: nx,
@@ -559,7 +543,6 @@ class Maze {
 		return [];
 	}
 
-	// Render the shortest path for debug mode
 	renderShortestPath(ctx) {
 		if (!this.shortestPath || this.shortestPath.length === 0) return;
 
@@ -623,7 +606,6 @@ class Maze {
 
 		ctx.save();
 
-		// Draw each artifact position
 		artifacts.forEach((artifact, index) => {
 			if (!artifact.collected) {
 				// Convert to grid coordinates

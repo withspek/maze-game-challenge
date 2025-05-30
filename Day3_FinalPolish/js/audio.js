@@ -18,7 +18,6 @@ class AudioManager {
 		}
 
 		try {
-			// Create audio context with fallback
 			this.audioContext = new (
 				window.AudioContext || window.webkitAudioContext
 			)();
@@ -30,7 +29,6 @@ class AudioManager {
 			// Set initialized flag
 			this.initialized = true;
 
-			// Create common game sounds
 			this.createSoundBank();
 
 			return true;
@@ -79,7 +77,6 @@ class AudioManager {
 		oscillator.start(now);
 		oscillator.stop(now + duration + 0.05);
 
-		// Clean up after playback
 		setTimeout(
 			() => {
 				gainNode.disconnect();
@@ -88,7 +85,6 @@ class AudioManager {
 		);
 	}
 
-	// jump sound (upward sweep)
 	createJumpSound() {
 		this.playJumpSound = () => {
 			if (!this.initialized || this.muted) {
@@ -125,7 +121,6 @@ class AudioManager {
 		};
 	}
 
-	// artifact collection sound (positive chime)
 	createCollectSound() {
 		this.playCollectSound = () => {
 			if (!this.initialized || this.muted) {
@@ -181,7 +176,6 @@ class AudioManager {
 		};
 	}
 
-	// hit obstacle sound (negative sound)
 	createHitSound() {
 		this.playHitSound = () => {
 			if (!this.initialized || this.muted) {
@@ -225,7 +219,6 @@ class AudioManager {
 		};
 	}
 
-	// level complete sound (triumphant)
 	createCompleteLevelSound() {
 		this.playCompleteLevelSound = () => {
 			if (!this.initialized || this.muted) {
@@ -302,7 +295,6 @@ class AudioManager {
 		};
 	}
 
-	// game over sound (somber)
 	createGameOverSound() {
 		this.playGameOverSound = () => {
 			if (!this.initialized || this.muted) {
@@ -380,7 +372,6 @@ class AudioManager {
 		};
 	}
 
-	// distortion curve for sound effects
 	makeDistortionCurve(amount) {
 		const k = amount;
 		const n_samples = 44100;
@@ -396,5 +387,4 @@ class AudioManager {
 	}
 }
 
-// singleton instance
 const audioManager = new AudioManager();

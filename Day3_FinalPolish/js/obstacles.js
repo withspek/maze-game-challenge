@@ -18,8 +18,6 @@ class Obstacle {
 		// Animation properties
 		this.frameCount = 0;
 		this.active = true;
-
-		// Set specific properties based on obstacle type
 		this.setupObstacleType();
 	}
 

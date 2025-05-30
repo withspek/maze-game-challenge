@@ -51,9 +51,7 @@ const calculateDistance = (x1, y1, x2, y2) => {
 	return Math.sqrt(dx * dx + dy * dy);
 };
 
-// These functions have been moved to the Game class
-// and are kept here only for backward compatibility
-// with any code that might still be using them
+
 const saveGameState = (state) => {
 	console.warn('saveGameState in utils.js is deprecated. Use game.saveGameState() instead.');
 	if (window.gameInstance) {

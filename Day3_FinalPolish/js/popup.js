@@ -99,7 +99,6 @@ class PopupManager {
 
 		this.title.textContent = content.title;
 
-		// Randomly select one fact from the content array
 		const randomFact =
 			content.content[Math.floor(Math.random() * content.content.length)];
 		this.content.textContent = randomFact;
@@ -107,7 +106,6 @@ class PopupManager {
 		this.container.style.display = "block";
 		this.isVisible = true;
 
-		// entrance animation
 		this.container.style.opacity = "0";
 		this.container.style.transform = "translate(-50%, -60%)";
 

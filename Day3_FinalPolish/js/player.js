@@ -46,15 +46,13 @@ class Player {
 			},
 		};
 
-		// Particle effects
 		this.particles = [];
 		this.particleTimer = 0;
 
 		// Animation state
 		this.frameCount = 0;
 		this.pulseValue = 0;
-
-		// Rwanda flag colors
+s
 		this.rwandaColors = {
 			blue: "#00A0D5", // Sky blue
 			yellow: "#E5BE01", // Yellow
@@ -80,7 +78,6 @@ class Player {
 			space: false,
 		};
 
-		// Keyboard event listeners
 		window.addEventListener("keydown", (e) => {
 			this.handleKeyDown(e);
 		});
@@ -456,7 +453,6 @@ class Player {
 			this.createDeathParticles();
 		}
 
-		// Create damage effect
 		this.effects.damaged.active = true;
 		this.effects.damaged.duration = 30; // Half second flash
 

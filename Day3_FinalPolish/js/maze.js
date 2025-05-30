@@ -247,7 +247,6 @@ class Maze {
 	}
 
 	isExitPosition(x, y) {
-		// Get grid position from pixel coordinates
 		const gridX = Math.floor(x / this.cellSize);
 		const gridY = Math.floor(y / this.cellSize);
 
@@ -260,24 +259,12 @@ class Maze {
 		const exactMatch = gridX === this.exit.x && gridY === this.exit.y;
 		const closeProximity = distance < 1.2; // Within ~1.2 cells for diagonal approach
 
-		// Log the check for debugging when the player is close
-		if (distance < 2) {
-			console.log(
-				`Exit check: Player at (${gridX}, ${gridY}), Exit at (${this.exit.x}, ${this.exit.y}), Distance: ${distance.toFixed(2)}`,
-			);
-			console.log(`Exit match? ${exactMatch || closeProximity ? "YES" : "NO"}`);
-		}
-
 		return exactMatch || closeProximity;
 	}
 
 	render(ctx, theme) {
 		ctx.save();
-
-		// Store theme reference for debugging
 		this.theme = theme;
-
-		// Set the wall color based on theme
 		const wallColor = theme ? theme.wallColor : "#00ffff";
 		const floorColor = theme ? theme.floorColor : "#001122";
 		const floorDetailColor = theme ? theme.floorDetailColor : "#003366";

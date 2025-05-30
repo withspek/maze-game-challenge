@@ -113,7 +113,6 @@ class Game {
 		};
 
 		window.addEventListener("keydown", (e) => {
-			// Track key press
 			this.activeKeys[e.key] = true;
 
 			// Debug victory trigger with V key when in debug mode
@@ -185,12 +184,10 @@ class Game {
 			}
 		});
 
-		// Track key releases
 		window.addEventListener("keyup", (e) => {
 			delete this.activeKeys[e.key];
 		});
 		
-		// Add beforeunload event to save game state when window is closed unexpectedly
 		window.addEventListener("beforeunload", () => {
 			// Only save if the game is actually running (not game over, not paused, not completed)
 			if (this.running && !this.gameOver && !this.win) {
@@ -206,18 +203,13 @@ class Game {
 		this.gameOver = false;
 		this.win = false;
 		this.isExitingStage = false;
-		
-		// Initialize first stage with clean state
 		this.initStage(true);
 		
-		// Reset any particles or effects
 		this.backgroundParticles = [];
 		this._victoryRendered = false;
 		
-		// Save initial game state
 		this.saveGameState(false);
 		
-		// Start the game
 		this.running = true;
 		this.lastTime = performance.now();
 		
@@ -259,13 +251,10 @@ class Game {
 					this.artifacts[i].collected = true;
 				}
 			}
-			
-			// Restore timer
 			if (typeof savedTimer === 'number') {
 				this.timer = savedTimer;
 			}
 			
-			// Update HUD with restored values
 			this.updateHUD();
 			
 			// Start game
@@ -355,19 +344,13 @@ class Game {
 			if (!preserveTimer) {
 				this.timer = Math.max(60, 180 - (this.difficulty - 1) * 20);
 			}
-
-			// Regenerate background particles with theme colors
 			this.generateBackgroundParticles();
-
-			// Update HUD
 			this.updateHUD();
 
-			// Update stage indicator with theme name
 			if (this.stageElement) {
 				this.stageElement.textContent = `Stage: ${this.stage}/${this.maxStage} - ${this.currentTheme.name}`;
 			}
 
-			console.log("Stage initialized successfully: ", this.stage);
 		} catch (error) {
 			console.error("Error initializing stage:", error);
 			// Fallback to a basic setup if initialization fails
@@ -483,14 +466,8 @@ class Game {
 				return;
 			}
 		}
-
-		// Update game objects
 		this.update();
-
-		// Render the game
 		this.render();
-
-		// Continue the game loop
 		if (this.running) {
 			this.animationFrameId = requestAnimationFrame((timestamp) =>
 				this.gameLoop(timestamp),
@@ -499,10 +476,8 @@ class Game {
 	}
 
 	update() {
-		// Update player
 		this.player.update();
 
-		// Check if player has died
 		if (this.player.isDead && !this.gameOver) {
 			// Set game over state
 			this.gameOver = true;
@@ -526,15 +501,10 @@ class Game {
 			return;
 		}
 
-		// Update artifacts
 		for (const artifact of this.artifacts) {
 			artifact.update();
 		}
-
-		// Update obstacles
 		this.obstacleManager.update();
-
-		// Update background particles
 		this.updateBackgroundParticles();
 
 		// Check for collisions with artifacts
@@ -631,25 +601,19 @@ class Game {
 			}
 		}
 
-		// Update camera to follow player
 		this.updateCamera();
-
-		// Update shortest path if debug mode is active
 		if (this.debugMode && this.showShortestPath) {
 			this.updateShortestPath();
 		}
 	}
 
 	generateBackgroundParticles() {
-		// Clear existing particles
 		this.backgroundParticles = [];
 
-		// Use theme colors for particles
 		const colors = this.currentTheme
 			? this.currentTheme.particleColors
 			: ["#00ffff", "#0099ff", "#66ffff"];
 
-		// Create background particles
 		const particleCount = 50;
 		for (let i = 0; i < particleCount; i++) {
 			this.backgroundParticles.push({
@@ -716,7 +680,6 @@ class Game {
 	}
 
 	updateCamera() {
-		// Center camera on player with bounds checking
 		const targetX = this.player.x - this.width / 2;
 		const targetY = this.player.y - this.height / 2;
 
@@ -771,7 +734,7 @@ class Game {
 	renderTimerBar() {
 		const barWidth = this.width;
 		const barHeight = 5;
-		const progress = this.timer / 180; // Percentage of time remaining
+		const progress = this.timer / 180;
 
 		// Draw background
 		this.ctx.fillStyle = "#333";
@@ -902,14 +865,11 @@ class Game {
 			this.width / 2,
 			buttonY + buttonHeight / 2 + 5,
 		);
-
-		// First remove any existing event listener to prevent duplicates
 		if (this._gameOverClickHandler) {
 			this.canvas.removeEventListener("click", this._gameOverClickHandler);
 			this._gameOverClickHandler = null;
 		}
 
-		// Create a new click handler
 		this._gameOverClickHandler = (e) => {
 			const rect = this.canvas.getBoundingClientRect();
 			const x = e.clientX - rect.left;
@@ -922,18 +882,11 @@ class Game {
 				y >= buttonY &&
 				y <= buttonY + buttonHeight
 			) {
-				console.log("Return button clicked");
-
-				// Clean up the event listener
 				this.canvas.removeEventListener("click", this._gameOverClickHandler);
 				this._gameOverClickHandler = null;
-
-				// Return to menu
 				this.returnToMenu();
 			}
 		};
-
-		// Add the click event listener
 		this.canvas.addEventListener("click", this._gameOverClickHandler);
 	}
 
@@ -942,22 +895,15 @@ class Game {
 			if (this.hasAudio) {
 				audioManager.playCompleteLevelSound();
 			}
-
-			// Remove saving game state on intermediate stage completion
-			// We only want to save when browser is closed unexpectedly
-			
-			// Create a smooth transition effect instead of showing the completion screen
 			this.performSmoothStageTransition(() => {
 				// Proceed to next stage after transition
 				this.stage++;
 
-				// Initialize new stage with clean state
 				this.initStage(false);
 				this.render();
 				this.running = true;
 			});
 		} else {
-			// Final stage completion
 			this.running = false;
 			this.gameOver = true;
 			this.win = true;
@@ -972,9 +918,6 @@ class Game {
 			if (this.hasAudio) {
 				audioManager.playCompleteLevelSound();
 			}
-
-			// Save player stats and game state with completion flag
-			// Keep this as it marks the game as completed
 			this.saveGameState(true);
 
 			// Clear any existing timeout to prevent multiple calls
@@ -987,8 +930,6 @@ class Game {
 			
 			// Ensure that we use theme 3 for the victory screen
 			this.currentTheme = this.themes[3] || this.themes[this.stage];
-
-			// Set a short timeout to allow the game to process the transition
 			this._victoryTimeout = setTimeout(() => {
 				// Restore player data that we need for the victory screen
 				if (!this.player) {
@@ -998,7 +939,6 @@ class Game {
 				}
 				this.timer = timeRemaining;
 				
-				// Start the animation loop for victory screen immediately
 				if (!this.animationFrameId) {
 					this.animationFrameId = requestAnimationFrame((timestamp) =>
 						this.gameLoop(timestamp)
@@ -1013,7 +953,6 @@ class Game {
 		const fadeStep = 0.05;
 		
 		const performFade = () => {
-			// Draw a semi-transparent overlay
 			this.ctx.fillStyle = `rgba(0, 20, 40, ${opacity})`;
 			this.ctx.fillRect(0, 0, this.width, this.height);
 			
@@ -1081,7 +1020,6 @@ class Game {
 
 		try {
 			localStorage.setItem('futureskillsArtifact', JSON.stringify(stats));
-			console.log('Game state saved successfully');
 		} catch (e) {
 			console.error('Failed to save game state:', e);
 		}
@@ -1102,7 +1040,6 @@ class Game {
 	clearGameState() {
 		try {
 			localStorage.removeItem('futureskillsArtifact');
-			console.log('Game state cleared successfully');
 		} catch (e) {
 			console.error('Failed to clear game state:', e);
 		}
@@ -1114,8 +1051,6 @@ class Game {
 		}
 		if (this.artifactsElement) {
 			this.artifactsElement.textContent = `Artifacts: ${this.artifactsCollected}/${this.totalArtifacts}`;
-
-			// Add exit instruction when all artifacts are collected
 			if (this.artifactsCollected >= this.totalArtifacts) {
 				this.artifactsElement.textContent += " - Find the exit!";
 				this.artifactsElement.style.color = "#00ff00";
@@ -1153,8 +1088,6 @@ class Game {
 				this.maze.shortestPath = [];
 			}
 		}
-
-		console.log(`Debug mode: ${this.debugMode ? "ON" : "OFF"}`);
 	}
 
 	toggleShortestPath() {
@@ -1171,11 +1104,8 @@ class Game {
 				this.maze.shortestPath = [];
 			}
 		}
-
-		console.log(`Shortest path: ${this.showShortestPath ? "ON" : "OFF"}`);
 	}
 
-	// Cycle through artifacts to show path to
 	cycleTargetArtifact() {
 		if (
 			!this.debugMode ||
@@ -1188,12 +1118,6 @@ class Game {
 		this.targetArtifactIndex =
 			(this.targetArtifactIndex + 1) % this.artifacts.length;
 		this.updateShortestPath();
-
-		console.log(
-			`Target artifact: ${this.targetArtifactIndex + 1}/${
-				this.artifacts.length
-			}`,
-		);
 	}
 
 	updateShortestPath() {
@@ -1323,7 +1247,6 @@ class Game {
 	}
 
 	renderExitIndicator() {
-		// Calculate exit position in pixels
 		const exitX = (this.maze.exit.x + 0.5) * this.cellSize;
 		const exitY = (this.maze.exit.y + 0.5) * this.cellSize;
 
@@ -1335,7 +1258,6 @@ class Game {
 		// Only show indicator if the exit is not visible on screen
 		const visibilityThreshold = this.width * 0.75;
 		if (distance > visibilityThreshold) {
-			// Normalize the direction vector
 			const normalizedDx = dx / distance;
 			const normalizedDy = dy / distance;
 
@@ -1344,18 +1266,14 @@ class Game {
 			const indicatorX = this.player.x + normalizedDx * indicatorDistance;
 			const indicatorY = this.player.y + normalizedDy * indicatorDistance;
 
-			// Draw pulsing arrow pointing toward exit
 			const pulseScale = 0.8 + 0.2 * Math.sin(Date.now() / 200);
 			const arrowSize = 15 * pulseScale;
-
-			// Save context for arrow drawing
 			this.ctx.save();
 
 			// Move to indicator position and rotate toward exit
 			this.ctx.translate(indicatorX, indicatorY);
 			this.ctx.rotate(Math.atan2(dy, dx));
 
-			// Draw arrow
 			this.ctx.fillStyle = "#00ff00";
 			this.ctx.beginPath();
 			this.ctx.moveTo(arrowSize, 0);
@@ -1369,10 +1287,8 @@ class Game {
 			this.ctx.shadowBlur = 10;
 			this.ctx.fill();
 
-			// Restore context
 			this.ctx.restore();
 
-			// Draw "EXIT" text near the arrow
 			this.ctx.save();
 			this.ctx.fillStyle = "#00ff00";
 			this.ctx.font = 'bold 12px "Courier New", monospace';
@@ -1468,7 +1384,6 @@ class Game {
 		const borderWidth = 8;
 		const rwandaColors = ["#00A0D5", "#E5BE01", "#20603D"];
 
-		// Main border
 		this.ctx.lineWidth = borderWidth;
 		this.ctx.strokeStyle = "#2c3e50";
 		this.ctx.strokeRect(x, y, width, height);
@@ -1538,7 +1453,6 @@ class Game {
 		this.ctx.stroke();
 		this.ctx.restore();
 
-		// Main content
 		this.ctx.save();
 		this.ctx.fillStyle = "#34495e";
 		this.ctx.font = '16px "Georgia", serif';
@@ -1589,7 +1503,6 @@ class Game {
 	}
 
 	drawCertificateDecorations(x, y, width, height, theme) {
-		// Corner decorations
 		const cornerSize = 30;
 
 		this.ctx.save();

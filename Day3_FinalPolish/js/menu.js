@@ -80,6 +80,8 @@ class MenuSystem {
 		}
 
 		try {
+			this.hideMenuScreen();
+			
 			if (this.game) {
 				this.game.loadSavedGame();
 			} else {
@@ -94,7 +96,7 @@ class MenuSystem {
 
 	checkForSavedGame() {
 		// Check if there's a saved game
-		const savedState = loadGameState();
+		const savedState = this.game ? this.game.loadGameState() : null;
 
 		if (savedState && !savedState.completed) {
 			// Show continue button if there's a saved game in progress

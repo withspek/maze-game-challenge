@@ -110,7 +110,6 @@ class Obstacle {
 				}
 
 				case "spike":
-					// Only collides if spikes are out
 					if (this.spikesOut) {
 						const obstacleBox = this.getCollisionBox();
 
@@ -125,7 +124,6 @@ class Obstacle {
 					break;
 
 				case "slowField": {
-					// Check if player is within the circular field
 					const playerCenterX = playerBox.x + playerBox.width / 2;
 					const playerCenterY = playerBox.y + playerBox.height / 2;
 
@@ -161,7 +159,6 @@ class Obstacle {
 				`Error in obstacle collision detection (${this.type}):`,
 				error,
 			);
-			// Default to no collision on error
 			collides = false;
 		}
 
@@ -237,12 +234,8 @@ class Obstacle {
 				this.renderSpikes(ctx);
 				break;
 
-			case "slowField":
-				this.renderSlowField(ctx);
-				break;
-
 			default:
-				this.renderGenericObstacle(ctx);
+				this.renderSlowField(ctx);
 		}
 
 		ctx.restore();
@@ -286,13 +279,11 @@ class Obstacle {
 		const centerY = this.y;
 		const spikeSize = this.spikesOut ? this.width / 2 : this.width / 6;
 
-		// Draw base
 		ctx.fillStyle = "#553300";
 		ctx.beginPath();
 		ctx.arc(centerX, centerY, this.width / 4, 0, Math.PI * 2);
 		ctx.fill();
 
-		// Draw spikes
 		ctx.fillStyle = this.color;
 
 		const numSpikes = 8;
@@ -314,18 +305,6 @@ class Obstacle {
 			ctx.fill();
 
 			ctx.restore();
-		}
-
-		// Warning text if spikes are about to come out
-		if (
-			!this.spikesOut &&
-			this.cyclePosition > this.cycleTime / 3 - 20 &&
-			this.cyclePosition < this.cycleTime / 3
-		) {
-			ctx.fillStyle = "#ff0000";
-			ctx.font = `${this.cellSize / 4}px Arial`;
-			ctx.textAlign = "center";
-			ctx.fillText("!", centerX, centerY + this.cellSize / 10);
 		}
 	}
 
@@ -367,29 +346,6 @@ class Obstacle {
 			ctx.stroke();
 		}
 	}
-
-	renderGenericObstacle(ctx) {
-		// Draw a generic hazard symbol
-		ctx.fillStyle = this.color;
-		ctx.strokeStyle = "#ffffff";
-		ctx.lineWidth = 2;
-
-		// Draw hazard triangle
-		ctx.beginPath();
-		ctx.moveTo(this.x, this.y - this.height / 2);
-		ctx.lineTo(this.x + this.width / 2, this.y + this.height / 2);
-		ctx.lineTo(this.x - this.width / 2, this.y + this.height / 2);
-		ctx.closePath();
-		ctx.fill();
-		ctx.stroke();
-
-		// Draw warning symbol
-		ctx.fillStyle = "#000000";
-		ctx.font = `bold ${this.cellSize / 2}px Arial`;
-		ctx.textAlign = "center";
-		ctx.textBaseline = "middle";
-		ctx.fillText("!", this.x, this.y);
-	}
 }
 
 class ObstacleManager {
@@ -399,24 +355,16 @@ class ObstacleManager {
 
 	generateObstacles(maze, cellSize, count, difficulty) {
 		this.obstacles = [];
-
-		// Obstacle types
 		const obstacleTypes = ["laser", "spike", "slowField"];
 
-		// Generate random obstacles
 		for (let i = 0; i < count; i++) {
-			// Get a random empty cell in the maze
 			const cell = maze.getRandomEmptyCell();
-
-			// Choose a random obstacle type
 			const type =
 				obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
 
 			// Convert grid coordinates to pixel coordinates (center of the cell)
 			const x = (cell.x + 0.5) * cellSize;
 			const y = (cell.y + 0.5) * cellSize;
-
-			// Create the obstacle
 			const obstacle = new Obstacle(x, y, type, cellSize, difficulty);
 
 			this.obstacles.push(obstacle);
@@ -430,13 +378,11 @@ class ObstacleManager {
 	}
 
 	checkCollisions(player) {
-		// Check each obstacle for collision with the player
 		for (const obstacle of this.obstacles) {
 			if (obstacle.checkCollision(player.getCollisionBox())) {
 				return obstacle;
 			}
 		}
-
 		return null;
 	}
 

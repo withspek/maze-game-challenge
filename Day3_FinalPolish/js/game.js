@@ -1,7 +1,7 @@
 /**
- * Main game class for FutureskillsArtifact
+ * Main Game controller class
+ * responsinble for rendering the game and updating the game state
  */
-
 class Game {
 	constructor() {
 		this.canvas = document.getElementById("gameCanvas");
@@ -12,6 +12,7 @@ class Game {
 		this.height = this.canvas.height;
 		this.cellSize = 40;
 		this.difficulty = 1;
+
 		// Debug mode
 		this.debugMode = false;
 		this.showShortestPath = false;
@@ -188,6 +189,14 @@ class Game {
 		window.addEventListener("keyup", (e) => {
 			delete this.activeKeys[e.key];
 		});
+		
+		// Add beforeunload event to save game state when window is closed unexpectedly
+		window.addEventListener("beforeunload", () => {
+			// Only save if the game is actually running (not game over, not paused, not completed)
+			if (this.running && !this.gameOver && !this.win) {
+				this.saveGameState(false);
+			}
+		});
 
 		this.menuSystem = new MenuSystem(this);
 	}
@@ -197,9 +206,22 @@ class Game {
 		this.gameOver = false;
 		this.win = false;
 		this.isExitingStage = false;
+		
+		// Initialize first stage with clean state
 		this.initStage(true);
+		
+		// Reset any particles or effects
+		this.backgroundParticles = [];
+		this._victoryRendered = false;
+		
+		// Save initial game state
+		this.saveGameState(false);
+		
+		// Start the game
 		this.running = true;
 		this.lastTime = performance.now();
+		
+		// Ensure only one animation frame is running
 		if (this.animationFrameId) {
 			cancelAnimationFrame(this.animationFrameId);
 		}
@@ -209,15 +231,44 @@ class Game {
 	}
 
 	loadSavedGame() {
-		const savedState = loadGameState();
+		const savedState = this.loadGameState();
 		if (savedState) {
+			// Set stage and difficulty from saved state
 			this.stage = savedState.stage || 1;
+			this.difficulty = savedState.difficulty || this.difficulty;
 			this.isExitingStage = false;
-			this.initStage(true);
+			
+			// Store timer value to use after initialization
+			const savedTimer = savedState.timeRemaining;
+			
+			// Initialize the stage first (preserve timer)
+			this.initStage(true, true);
+			
+			// Create player and restore health
 			this.player = new Player(this.maze, this.cellSize);
 			if (savedState.health) {
 				this.player.health = savedState.health;
 			}
+			
+			// Restore artifacts collected
+			if (typeof savedState.artifacts === 'number') {
+				this.artifactsCollected = Math.min(savedState.artifacts, this.totalArtifacts);
+				
+				// Mark the appropriate number of artifacts as collected
+				for (let i = 0; i < this.artifactsCollected && i < this.artifacts.length; i++) {
+					this.artifacts[i].collected = true;
+				}
+			}
+			
+			// Restore timer
+			if (typeof savedTimer === 'number') {
+				this.timer = savedTimer;
+			}
+			
+			// Update HUD with restored values
+			this.updateHUD();
+			
+			// Start game
 			this.running = true;
 			this.lastTime = performance.now();
 			if (this.animationFrameId) {
@@ -226,12 +277,14 @@ class Game {
 			this.animationFrameId = requestAnimationFrame((timestamp) =>
 				this.gameLoop(timestamp),
 			);
+			
+			console.log('Game state restored successfully', savedState);
 		} else {
 			this.startNewGame();
 		}
 	}
 
-	initStage(isNewGame = false) {
+	initStage(isNewGame = false, preserveTimer = false) {
 		try {
 			// Reset exit flag
 			this.isExitingStage = false;
@@ -298,7 +351,10 @@ class Game {
 			);
 
 			// Reset timer based on difficulty (less time on higher difficulty)
-			this.timer = Math.max(60, 180 - (this.difficulty - 1) * 20);
+			// Only reset timer if not preserving existing timer
+			if (!preserveTimer) {
+				this.timer = Math.max(60, 180 - (this.difficulty - 1) * 20);
+			}
 
 			// Regenerate background particles with theme colors
 			this.generateBackgroundParticles();
@@ -358,12 +414,15 @@ class Game {
 		if (this.gameOver && this.win) {
 			this.frameCount++;
 
+			this.ctx.clearRect(0, 0, this.width, this.height);
 			this.updateBackgroundParticles();
 
-			// re-render victory screen with updated particles but at a reduced rate
-			// only re-render every few frames to reduce CPU usage
-			if (this.frameCount % 3 === 0) {
+			if (!this._victoryRendered) {
 				this.renderVictory();
+			} else {
+				// Just update the particles animation without redrawing everything
+				this.createVictoryBackground();
+				this.drawCertificate(this.currentTheme);
 			}
 
 			// Continue game loop for particle animations
@@ -410,6 +469,9 @@ class Game {
 				this.gameOver = true;
 				this.win = false;
 				this.running = false;
+				
+				// Clear any saved game state
+				this.clearGameState();
 
 				// Play game over sound
 				if (this.hasAudio) {
@@ -446,6 +508,9 @@ class Game {
 			this.gameOver = true;
 			this.win = false;
 			this.running = false;
+			
+			// Clear any saved game state
+			this.clearGameState();
 
 			// Play game over sound
 			if (this.hasAudio) {
@@ -528,10 +593,7 @@ class Game {
 
 			if (mazeExitCheck || directExitCheck) {
 				console.log("Exit reached! Completing stage...");
-				// Set flag to prevent multiple completions
 				this.isExitingStage = true;
-
-				// Complete the stage
 				this.completeStage();
 			}
 
@@ -622,14 +684,12 @@ class Game {
 
 				// Update rotation if the particle has it
 				if (particle.rotation) {
-					particle.rotationAngle =
-						(particle.rotationAngle || 0) + particle.rotation;
+					particle.rotationAngle = (particle.rotationAngle || 0) + particle.rotation;
 				}
 
-				// Simplified alpha handling - no twinkle
+				// Fade out particles near end of life
 				if (particle.life < 30) {
-					// Fade out particles as they near the end of their life
-					particle.alpha = (particle.alpha || 1) * 0.95;
+					particle.alpha = Math.max(0, (particle.life / 30));
 				}
 
 				// Remove dead particles or those that have fallen below the screen
@@ -649,7 +709,6 @@ class Game {
 
 				// Occasionally change direction (less frequently)
 				if (Math.random() < 0.005) {
-					// Reduced from 0.01
 					particle.angle = Math.random() * Math.PI * 2;
 				}
 			}
@@ -682,8 +741,6 @@ class Game {
 			: "#000022";
 		this.ctx.fillRect(0, 0, this.width, this.height);
 
-		this.renderBackgroundParticles();
-
 		this.ctx.save();
 
 		this.ctx.translate(-this.cameraX, -this.cameraY);
@@ -708,61 +765,6 @@ class Game {
 
 		if (this.debugMode) {
 			this.renderDebugInfo();
-		}
-	}
-
-	renderBackgroundParticles() {
-		for (let i = 0; i < this.backgroundParticles.length; i++) {
-			const particle = this.backgroundParticles[i];
-			this.ctx.save();
-
-			// Set particle color with alpha if specified
-			if (particle.alpha !== undefined) {
-				if (particle.alpha < 0.05) {
-					// Skip nearly invisible particles
-					this.ctx.restore();
-					continue;
-				}
-
-				// Handle hex colors by converting to RGBA
-				if (particle.color.startsWith("#")) {
-					const r = Number.parseInt(particle.color.slice(1, 3), 16);
-					const g = Number.parseInt(particle.color.slice(3, 5), 16);
-					const b = Number.parseInt(particle.color.slice(5, 7), 16);
-					this.ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${particle.alpha})`;
-				} else {
-					this.ctx.fillStyle = particle.color;
-					this.ctx.globalAlpha = particle.alpha;
-				}
-			} else {
-				this.ctx.fillStyle = particle.color;
-			}
-
-			// Apply translation to particle position
-			this.ctx.translate(particle.x, particle.y);
-
-			// Apply rotation if present
-			if (particle.rotationAngle) {
-				this.ctx.rotate(particle.rotationAngle);
-			}
-
-			// Draw particle according to its shape
-			if (particle.shape === "rect") {
-				// Draw rectangle for confetti-like particles
-				this.ctx.fillRect(
-					-particle.size / 2,
-					-particle.size / 2,
-					particle.size,
-					particle.size,
-				);
-			} else {
-				// Default to circle for regular particles
-				this.ctx.beginPath();
-				this.ctx.arc(0, 0, particle.size, 0, Math.PI * 2);
-				this.ctx.fill();
-			}
-
-			this.ctx.restore();
 		}
 	}
 
@@ -824,26 +826,27 @@ class Game {
 	returnToMenu() {
 		this.running = false;
 		this.paused = false;
+		
+		// Clear game state if the game is over (failure case)
+		if (this.gameOver && !this.win) {
+			this.clearGameState();
+		}
+		
 		this.gameOver = false;
 		if (this.animationFrameId) {
 			cancelAnimationFrame(this.animationFrameId);
 			this.animationFrameId = null;
 		}
-		// Make sure we properly clean up the game state
+
 		if (this.player) {
 			this.player.isDead = false;
 		}
 
-		// Save game state
-		this.saveGameState();
-
-		// Return to menu
 		if (this.menuSystem) {
 			this.menuSystem.showMenuScreen();
 			this.menuSystem.checkForSavedGame();
 		} else {
 			console.error("Menu system not available");
-			// As a fallback, reload the page
 			window.location.reload();
 		}
 	}
@@ -900,8 +903,6 @@ class Game {
 			buttonY + buttonHeight / 2 + 5,
 		);
 
-		this.saveGameState();
-
 		// First remove any existing event listener to prevent duplicates
 		if (this._gameOverClickHandler) {
 			this.canvas.removeEventListener("click", this._gameOverClickHandler);
@@ -937,17 +938,18 @@ class Game {
 	}
 
 	completeStage() {
-		console.log(`Completing stage ${this.stage} of ${this.maxStage}`);
-
 		if (this.stage < this.maxStage) {
 			if (this.hasAudio) {
 				audioManager.playCompleteLevelSound();
 			}
 
-			this.renderStageComplete(() => {
-				// Proceed to next stage after delay
+			// Remove saving game state on intermediate stage completion
+			// We only want to save when browser is closed unexpectedly
+			
+			// Create a smooth transition effect instead of showing the completion screen
+			this.performSmoothStageTransition(() => {
+				// Proceed to next stage after transition
 				this.stage++;
-				console.log(`Moving to next stage: ${this.stage}`);
 
 				// Initialize new stage with clean state
 				this.initStage(false);
@@ -955,123 +957,442 @@ class Game {
 				this.running = true;
 			});
 		} else {
-			// Final stage completion - show victory screen
-			console.log("Final stage completed! Showing victory screen.");
-
-			// Immediately stop the game loop to prevent further updates
+			// Final stage completion
 			this.running = false;
-
-			// Set game over and win flags
 			this.gameOver = true;
 			this.win = true;
-
-			// Clear existing particles to reduce lag
+			
+			// Store important player data
+			const playerHealth = this.player ? this.player.health : 100;
+			const timeRemaining = this.timer;
+			
+			// Clear existing particles and create new celebration particles
 			this.backgroundParticles = [];
 
 			if (this.hasAudio) {
 				audioManager.playCompleteLevelSound();
 			}
 
-			// Ensure the player object is saved before resetting anything
-			const playerHealth = this.player ? this.player.health : 100;
-			const timeRemaining = this.timer;
+			// Save player stats and game state with completion flag
+			// Keep this as it marks the game as completed
+			this.saveGameState(true);
 
-			// Save game state with victory flag
-			this.saveGameState();
-
-			// Clear any existing timeouts to prevent issues
+			// Clear any existing timeout to prevent multiple calls
 			if (this._victoryTimeout) {
 				clearTimeout(this._victoryTimeout);
 			}
 
-			// Use setTimeout with a short delay to ensure clean rendering
+			// Make sure the _victoryRendered flag is reset
+			this._victoryRendered = false;
+			
+			// Ensure that we use theme 3 for the victory screen
+			this.currentTheme = this.themes[3] || this.themes[this.stage];
+
+			// Set a short timeout to allow the game to process the transition
 			this._victoryTimeout = setTimeout(() => {
-				// Force the theme to be the final stage theme
-				this.currentTheme = this.themes[3];
-
-				// Restore player health and time for display
-				this.player = this.player || { health: playerHealth };
+				// Restore player data that we need for the victory screen
+				if (!this.player) {
+					this.player = { health: playerHealth };
+				} else {
+					this.player.health = playerHealth;
+				}
 				this.timer = timeRemaining;
-
-				// Render the victory screen once
-				this.renderVictory();
-
-				// Start game loop again just for particle effects
-				this.animationFrameId = requestAnimationFrame((timestamp) =>
-					this.gameLoop(timestamp),
-				);
+				
+				// Start the animation loop for victory screen immediately
+				if (!this.animationFrameId) {
+					this.animationFrameId = requestAnimationFrame((timestamp) =>
+						this.gameLoop(timestamp)
+					);
+				}
 			}, 100);
 		}
 	}
 
-	renderStageComplete(callback) {
-		// Darken the screen
-		this.ctx.fillStyle = "rgba(0, 20, 40, 0.8)";
-		this.ctx.fillRect(0, 0, this.width, this.height);
-
-		// Draw completion message
-		this.ctx.fillStyle = "#00ffff";
-		this.ctx.font = 'bold 36px "Courier New", monospace';
-		this.ctx.textAlign = "center";
-		this.ctx.fillText(
-			`STAGE ${this.stage} COMPLETE!`,
-			this.width / 2,
-			this.height / 2 - 80,
-		);
-
-		this.ctx.font = '16px "Courier New", monospace';
-		this.ctx.fillText(
-			"All artifacts collected and exit reached!",
-			this.width / 2,
-			this.height / 2 - 40,
-		);
-		this.ctx.fillText(
-			`Time remaining: ${this.timer} seconds`,
-			this.width / 2,
-			this.height / 2,
-		);
-		this.ctx.fillText(
-			`Health: ${this.player.health}%`,
-			this.width / 2,
-			this.height / 2 + 25,
-		);
-
-		const barWidth = 300;
-		const barHeight = 20;
-		const barX = this.width / 2 - barWidth / 2;
-		const barY = this.height / 2 + 60;
-
-		this.ctx.fillStyle = "#333";
-		this.ctx.fillRect(barX, barY, barWidth, barHeight);
-
-		// Animate loading bar
-		let progress = 0;
-		const loadingInterval = setInterval(() => {
-			progress += 2;
-
-			// Draw loading bar progress
-			this.ctx.fillStyle = "#00ffff";
-			this.ctx.fillRect(barX, barY, barWidth * (progress / 100), barHeight);
-
-			if (progress >= 100) {
-				clearInterval(loadingInterval);
-
-				// Wait a moment before proceeding
-				setTimeout(callback, 500);
+	performSmoothStageTransition(callback) {
+		let opacity = 0;
+		const fadeStep = 0.05;
+		
+		const performFade = () => {
+			// Draw a semi-transparent overlay
+			this.ctx.fillStyle = `rgba(0, 20, 40, ${opacity})`;
+			this.ctx.fillRect(0, 0, this.width, this.height);
+			
+			opacity += fadeStep;
+			
+			if (opacity < 1) {
+				// Continue the fade effect
+				requestAnimationFrame(performFade);
+			} else {
+				// Fade completed, show transition message
+				this.ctx.fillStyle = "#00ffff";
+				this.ctx.font = 'bold 24px "Courier New", monospace';
+				this.ctx.textAlign = "center";
+				this.ctx.fillText(
+					`Stage ${this.stage} Complete!`,
+					this.width / 2,
+					this.height / 2 - 40
+				);
+				this.ctx.fillText(
+					`Proceeding to Stage ${this.stage + 1}...`,
+					this.width / 2,
+					this.height / 2
+				);
+				
+				// Wait a moment then fade back in with callback
+				setTimeout(() => {
+					callback();
+					
+					// Start fade-in for new stage
+					let fadeInOpacity = 1;
+					const fadeIn = () => {
+						// Render the new stage first
+						this.render();
+						
+						// Draw overlay with decreasing opacity
+						this.ctx.fillStyle = `rgba(0, 20, 40, ${fadeInOpacity})`;
+						this.ctx.fillRect(0, 0, this.width, this.height);
+						
+						fadeInOpacity -= fadeStep;
+						
+						if (fadeInOpacity > 0) {
+							requestAnimationFrame(fadeIn);
+						}
+					};
+					
+					fadeIn();
+				}, 1000);
 			}
-		}, 30);
+		};
+		
+		performFade();
+	}
 
-		this.saveGameState();
+	saveGameState(completed = false) {
+		const stats = {
+			completed: completed || this.win,
+			stage: this.stage,
+			artifacts: this.artifactsCollected,
+			totalArtifacts: this.totalArtifacts,
+			timeRemaining: this.timer,
+			health: this.player ? this.player.health : 100,
+			timestamp: Date.now(),
+			difficulty: this.difficulty
+		};
+
+		try {
+			localStorage.setItem('futureskillsArtifact', JSON.stringify(stats));
+			console.log('Game state saved successfully');
+		} catch (e) {
+			console.error('Failed to save game state:', e);
+		}
+	}
+	
+	loadGameState() {
+		try {
+			const savedState = localStorage.getItem('futureskillsArtifact');
+			if (savedState) {
+				return JSON.parse(savedState);
+			}
+		} catch (e) {
+			console.error('Failed to load game state:', e);
+		}
+		return null;
+	}
+
+	clearGameState() {
+		try {
+			localStorage.removeItem('futureskillsArtifact');
+			console.log('Game state cleared successfully');
+		} catch (e) {
+			console.error('Failed to clear game state:', e);
+		}
+	}
+
+	updateHUD() {
+		if (this.timerElement) {
+			this.timerElement.textContent = `Time: ${Math.ceil(this.timer)}`;
+		}
+		if (this.artifactsElement) {
+			this.artifactsElement.textContent = `Artifacts: ${this.artifactsCollected}/${this.totalArtifacts}`;
+
+			// Add exit instruction when all artifacts are collected
+			if (this.artifactsCollected >= this.totalArtifacts) {
+				this.artifactsElement.textContent += " - Find the exit!";
+				this.artifactsElement.style.color = "#00ff00";
+			} else {
+				this.artifactsElement.style.color = "";
+			}
+		}
+		if (this.healthElement) {
+			this.healthElement.textContent = `Health: ${this.player.health}%`;
+		}
+		if (this.stageElement) {
+			this.stageElement.textContent = `Stage: ${this.stage}/${this.maxStage}`;
+		}
+	}
+
+	toggleDebugMode() {
+		this.debugMode = !this.debugMode;
+
+		if (this.player?.debug) {
+			this.player.debug.enabled = this.debugMode;
+		}
+
+		if (this.debugMode) {
+			console.log("Debug Mode Activated!");
+			console.log("F1: Toggle Debug Mode");
+			console.log("F2: Toggle Shortest Path");
+			console.log("F3: Cycle Target Artifact");
+			console.log("F4: Toggle All Artifacts");
+			console.log("F5: Toggle Obstacles");
+			console.log("B: Toggle Player Debug Details");
+		} else {
+			this.showShortestPath = false;
+			this.targetArtifactIndex = -1;
+			if (this.maze) {
+				this.maze.shortestPath = [];
+			}
+		}
+
+		console.log(`Debug mode: ${this.debugMode ? "ON" : "OFF"}`);
+	}
+
+	toggleShortestPath() {
+		if (!this.debugMode) return;
+
+		this.showShortestPath = !this.showShortestPath;
+
+		if (this.showShortestPath) {
+			this.targetArtifactIndex = 0;
+			this.updateShortestPath();
+		} else {
+			this.targetArtifactIndex = -1;
+			if (this.maze) {
+				this.maze.shortestPath = [];
+			}
+		}
+
+		console.log(`Shortest path: ${this.showShortestPath ? "ON" : "OFF"}`);
+	}
+
+	// Cycle through artifacts to show path to
+	cycleTargetArtifact() {
+		if (
+			!this.debugMode ||
+			!this.showShortestPath ||
+			!this.artifacts ||
+			this.artifacts.length === 0
+		)
+			return;
+
+		this.targetArtifactIndex =
+			(this.targetArtifactIndex + 1) % this.artifacts.length;
+		this.updateShortestPath();
+
+		console.log(
+			`Target artifact: ${this.targetArtifactIndex + 1}/${
+				this.artifacts.length
+			}`,
+		);
+	}
+
+	updateShortestPath() {
+		if (
+			!this.debugMode ||
+			!this.showShortestPath ||
+			!this.player ||
+			!this.maze ||
+			!this.artifacts
+		)
+			return;
+
+		if (
+			this.targetArtifactIndex >= 0 &&
+			this.targetArtifactIndex < this.artifacts.length
+		) {
+			const artifact = this.artifacts[this.targetArtifactIndex];
+			if (!artifact.collected) {
+				this.maze.findShortestPath(
+					this.player.x,
+					this.player.y,
+					artifact.x,
+					artifact.y,
+				);
+			} else {
+				this.maze.shortestPath = [];
+			}
+		}
+	}
+
+	renderDebugInfo() {
+		this.ctx.fillStyle = "#00ff00";
+		this.ctx.font = "12px monospace";
+
+		let y = 30;
+		const x = 30;
+
+		this.ctx.fillText("DEBUG MODE (F1 to toggle)", x, y);
+		y += 20;
+		this.ctx.fillText(
+			`FPS: ${Math.round(1000 / (performance.now() - this.lastTime))}`,
+			x,
+			y,
+		);
+		y += 20;
+		this.ctx.fillText(
+			`Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)})`,
+			x,
+			y,
+		);
+		y += 20;
+		this.ctx.fillText(
+			`Grid: (${Math.floor(this.player.x / this.cellSize)}, ${Math.floor(
+				this.player.y / this.cellSize,
+			)})`,
+			x,
+			y,
+		);
+		y += 20;
+		this.ctx.fillText(`Exit: (${this.maze.exit.x}, ${this.maze.exit.y})`, x, y);
+		y += 20;
+		this.ctx.fillText(
+			`Shortest Path: ${this.showShortestPath ? "ON (F2)" : "OFF (F2)"}`,
+			x,
+			y,
+		);
+
+		if (this.showShortestPath) {
+			y += 20;
+			this.ctx.fillText(
+				`Target Artifact: ${this.targetArtifactIndex + 1}/${
+					this.artifacts.length
+				} (F3)`,
+				x,
+				y,
+			);
+		}
+
+		y += 20;
+		this.ctx.fillText(
+			`Player Debug: ${this.player.debug.enabled ? "ON (B)" : "OFF (B)"}`,
+			x,
+			y,
+		);
+
+		y += 15;
+		this.ctx.beginPath();
+		this.ctx.moveTo(x - 10, y);
+		this.ctx.lineTo(x + 240, y);
+		this.ctx.stroke();
+
+		if (this.showShortestPath && this.maze) {
+			this.maze.renderShortestPath(this.ctx);
+		}
+
+		if (this.showAllArtifacts && this.maze && this.artifacts) {
+			this.maze.renderArtifactPositions(this.ctx, this.artifacts);
+		}
+
+		this.renderGridOverlay();
+
+		this.ctx.restore();
+	}
+
+	renderGridOverlay() {
+		this.ctx.save();
+		this.ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
+		this.ctx.lineWidth = 0.5;
+
+		// Draw vertical grid lines
+		for (let x = 0; x <= this.width; x += this.cellSize) {
+			this.ctx.beginPath();
+			this.ctx.moveTo(x, 0);
+			this.ctx.lineTo(x, this.height);
+			this.ctx.stroke();
+		}
+
+		// Draw horizontal grid lines
+		for (let y = 0; y <= this.height; y += this.cellSize) {
+			this.ctx.beginPath();
+			this.ctx.moveTo(0, y);
+			this.ctx.lineTo(this.width, y);
+			this.ctx.stroke();
+		}
+
+		this.ctx.restore();
+	}
+
+	renderExitIndicator() {
+		// Calculate exit position in pixels
+		const exitX = (this.maze.exit.x + 0.5) * this.cellSize;
+		const exitY = (this.maze.exit.y + 0.5) * this.cellSize;
+
+		// Get vector from player to exit
+		const dx = exitX - this.player.x;
+		const dy = exitY - this.player.y;
+		const distance = Math.sqrt(dx * dx + dy * dy);
+
+		// Only show indicator if the exit is not visible on screen
+		const visibilityThreshold = this.width * 0.75;
+		if (distance > visibilityThreshold) {
+			// Normalize the direction vector
+			const normalizedDx = dx / distance;
+			const normalizedDy = dy / distance;
+
+			// Calculate a point along the edge of the screen in the direction of the exit
+			const indicatorDistance = 150; // Distance from player to indicator
+			const indicatorX = this.player.x + normalizedDx * indicatorDistance;
+			const indicatorY = this.player.y + normalizedDy * indicatorDistance;
+
+			// Draw pulsing arrow pointing toward exit
+			const pulseScale = 0.8 + 0.2 * Math.sin(Date.now() / 200);
+			const arrowSize = 15 * pulseScale;
+
+			// Save context for arrow drawing
+			this.ctx.save();
+
+			// Move to indicator position and rotate toward exit
+			this.ctx.translate(indicatorX, indicatorY);
+			this.ctx.rotate(Math.atan2(dy, dx));
+
+			// Draw arrow
+			this.ctx.fillStyle = "#00ff00";
+			this.ctx.beginPath();
+			this.ctx.moveTo(arrowSize, 0);
+			this.ctx.lineTo(-arrowSize / 2, arrowSize / 2);
+			this.ctx.lineTo(-arrowSize / 2, -arrowSize / 2);
+			this.ctx.closePath();
+			this.ctx.fill();
+
+			// Draw glow effect
+			this.ctx.shadowColor = "#00ff00";
+			this.ctx.shadowBlur = 10;
+			this.ctx.fill();
+
+			// Restore context
+			this.ctx.restore();
+
+			// Draw "EXIT" text near the arrow
+			this.ctx.save();
+			this.ctx.fillStyle = "#00ff00";
+			this.ctx.font = 'bold 12px "Courier New", monospace';
+			this.ctx.textAlign = "center";
+			const textOffset = arrowSize + 15;
+			const textX =
+				this.player.x + normalizedDx * (indicatorDistance + textOffset);
+			const textY =
+				this.player.y + normalizedDy * (indicatorDistance + textOffset);
+			this.ctx.fillText("EXIT", textX, textY);
+			this.ctx.restore();
+		}
 	}
 
 	renderVictory() {
-		console.log("Rendering victory screen");
-		this._victoryRendered = true;
-
-		const theme = this.themes[3]; // Stage 3 theme (Future Campus)
-
+		this.ctx.clearRect(0, 0, this.width, this.height);
+		const theme = this.themes[3] || this.currentTheme;
 		this.createVictoryBackground();
 		this.drawCertificate(theme);
+		this._victoryRendered = true;
 	}
 
 	createVictoryBackground() {
@@ -1308,307 +1629,6 @@ class Game {
 		this.ctx.stroke();
 
 		this.ctx.restore();
-	}
-
-	saveGameState() {
-		const stats = {
-			completed: this.win,
-			stage: this.stage,
-			artifacts: this.artifactsCollected,
-			timeRemaining: this.timer,
-			health: this.player ? this.player.health : 100,
-			timestamp: Date.now(),
-		};
-
-		saveGameState(stats);
-	}
-
-	updateHUD() {
-		if (this.timerElement) {
-			this.timerElement.textContent = `Time: ${Math.ceil(this.timer)}`;
-		}
-		if (this.artifactsElement) {
-			this.artifactsElement.textContent = `Artifacts: ${this.artifactsCollected}/${this.totalArtifacts}`;
-
-			// Add exit instruction when all artifacts are collected
-			if (this.artifactsCollected >= this.totalArtifacts) {
-				this.artifactsElement.textContent += " - Find the exit!";
-				this.artifactsElement.style.color = "#00ff00";
-			} else {
-				this.artifactsElement.style.color = "";
-			}
-		}
-		if (this.healthElement) {
-			this.healthElement.textContent = `Health: ${this.player.health}%`;
-		}
-		if (this.stageElement) {
-			this.stageElement.textContent = `Stage: ${this.stage}/${this.maxStage}`;
-		}
-	}
-
-	toggleDebugMode() {
-		this.debugMode = !this.debugMode;
-
-		if (this.player?.debug) {
-			this.player.debug.enabled = this.debugMode;
-		}
-
-		if (this.debugMode) {
-			console.log("Debug Mode Activated!");
-			console.log("F1: Toggle Debug Mode");
-			console.log("F2: Toggle Shortest Path");
-			console.log("F3: Cycle Target Artifact");
-			console.log("F4: Toggle All Artifacts");
-			console.log("F5: Toggle Obstacles");
-			console.log("B: Toggle Player Debug Details");
-		} else {
-			this.showShortestPath = false;
-			this.targetArtifactIndex = -1;
-			if (this.maze) {
-				this.maze.shortestPath = [];
-			}
-		}
-
-		console.log(`Debug mode: ${this.debugMode ? "ON" : "OFF"}`);
-	}
-
-	toggleShortestPath() {
-		if (!this.debugMode) return;
-
-		this.showShortestPath = !this.showShortestPath;
-
-		if (this.showShortestPath) {
-			this.targetArtifactIndex = 0;
-			this.updateShortestPath();
-		} else {
-			this.targetArtifactIndex = -1;
-			if (this.maze) {
-				this.maze.shortestPath = [];
-			}
-		}
-
-		console.log(`Shortest path: ${this.showShortestPath ? "ON" : "OFF"}`);
-	}
-
-	// Cycle through artifacts to show path to
-	cycleTargetArtifact() {
-		if (
-			!this.debugMode ||
-			!this.showShortestPath ||
-			!this.artifacts ||
-			this.artifacts.length === 0
-		)
-			return;
-
-		this.targetArtifactIndex =
-			(this.targetArtifactIndex + 1) % this.artifacts.length;
-		this.updateShortestPath();
-
-		console.log(
-			`Target artifact: ${this.targetArtifactIndex + 1}/${
-				this.artifacts.length
-			}`,
-		);
-	}
-
-	updateShortestPath() {
-		if (
-			!this.debugMode ||
-			!this.showShortestPath ||
-			!this.player ||
-			!this.maze ||
-			!this.artifacts
-		)
-			return;
-
-		if (
-			this.targetArtifactIndex >= 0 &&
-			this.targetArtifactIndex < this.artifacts.length
-		) {
-			const artifact = this.artifacts[this.targetArtifactIndex];
-			if (!artifact.collected) {
-				this.maze.findShortestPath(
-					this.player.x,
-					this.player.y,
-					artifact.x,
-					artifact.y,
-				);
-			} else {
-				this.maze.shortestPath = [];
-			}
-		}
-	}
-
-	renderDebugInfo() {
-		this.ctx.save();
-
-		this.ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-		this.ctx.fillRect(this.width - 270, 10, 260, 250);
-
-		this.ctx.strokeStyle = "#00ff00";
-		this.ctx.lineWidth = 1;
-		this.ctx.strokeRect(this.width - 270, 10, 260, 250);
-
-		this.ctx.fillStyle = "#00ff00";
-		this.ctx.font = "12px monospace";
-
-		let y = 30;
-		const x = this.width - 260;
-
-		this.ctx.fillText("DEBUG MODE (F1 to toggle)", x, y);
-		y += 20;
-		this.ctx.fillText(
-			`FPS: ${Math.round(1000 / (performance.now() - this.lastTime))}`,
-			x,
-			y,
-		);
-		y += 20;
-		this.ctx.fillText(
-			`Player: (${Math.round(this.player.x)}, ${Math.round(this.player.y)})`,
-			x,
-			y,
-		);
-		y += 20;
-		this.ctx.fillText(
-			`Grid: (${Math.floor(this.player.x / this.cellSize)}, ${Math.floor(
-				this.player.y / this.cellSize,
-			)})`,
-			x,
-			y,
-		);
-		y += 20;
-		this.ctx.fillText(`Exit: (${this.maze.exit.x}, ${this.maze.exit.y})`, x, y);
-		y += 20;
-		this.ctx.fillText(
-			`Shortest Path: ${this.showShortestPath ? "ON (F2)" : "OFF (F2)"}`,
-			x,
-			y,
-		);
-
-		if (this.showShortestPath) {
-			y += 20;
-			this.ctx.fillText(
-				`Target Artifact: ${this.targetArtifactIndex + 1}/${
-					this.artifacts.length
-				} (F3)`,
-				x,
-				y,
-			);
-		}
-
-		y += 20;
-		this.ctx.fillText(
-			`Player Debug: ${this.player.debug.enabled ? "ON (B)" : "OFF (B)"}`,
-			x,
-			y,
-		);
-
-		y += 15;
-		this.ctx.beginPath();
-		this.ctx.moveTo(x - 10, y);
-		this.ctx.lineTo(x + 240, y);
-		this.ctx.stroke();
-
-		if (this.showShortestPath && this.maze) {
-			this.maze.renderShortestPath(this.ctx);
-		}
-
-		if (this.showAllArtifacts && this.maze && this.artifacts) {
-			this.maze.renderArtifactPositions(this.ctx, this.artifacts);
-		}
-
-		this.renderGridOverlay();
-
-		this.ctx.restore();
-	}
-
-	renderGridOverlay() {
-		this.ctx.save();
-		this.ctx.strokeStyle = "rgba(255, 255, 255, 0.15)";
-		this.ctx.lineWidth = 0.5;
-
-		// Draw vertical grid lines
-		for (let x = 0; x <= this.width; x += this.cellSize) {
-			this.ctx.beginPath();
-			this.ctx.moveTo(x, 0);
-			this.ctx.lineTo(x, this.height);
-			this.ctx.stroke();
-		}
-
-		// Draw horizontal grid lines
-		for (let y = 0; y <= this.height; y += this.cellSize) {
-			this.ctx.beginPath();
-			this.ctx.moveTo(0, y);
-			this.ctx.lineTo(this.width, y);
-			this.ctx.stroke();
-		}
-
-		this.ctx.restore();
-	}
-
-	renderExitIndicator() {
-		// Calculate exit position in pixels
-		const exitX = (this.maze.exit.x + 0.5) * this.cellSize;
-		const exitY = (this.maze.exit.y + 0.5) * this.cellSize;
-
-		// Get vector from player to exit
-		const dx = exitX - this.player.x;
-		const dy = exitY - this.player.y;
-		const distance = Math.sqrt(dx * dx + dy * dy);
-
-		// Only show indicator if the exit is not visible on screen
-		const visibilityThreshold = this.width * 0.75;
-		if (distance > visibilityThreshold) {
-			// Normalize the direction vector
-			const normalizedDx = dx / distance;
-			const normalizedDy = dy / distance;
-
-			// Calculate a point along the edge of the screen in the direction of the exit
-			const indicatorDistance = 150; // Distance from player to indicator
-			const indicatorX = this.player.x + normalizedDx * indicatorDistance;
-			const indicatorY = this.player.y + normalizedDy * indicatorDistance;
-
-			// Draw pulsing arrow pointing toward exit
-			const pulseScale = 0.8 + 0.2 * Math.sin(Date.now() / 200);
-			const arrowSize = 15 * pulseScale;
-
-			// Save context for arrow drawing
-			this.ctx.save();
-
-			// Move to indicator position and rotate toward exit
-			this.ctx.translate(indicatorX, indicatorY);
-			this.ctx.rotate(Math.atan2(dy, dx));
-
-			// Draw arrow
-			this.ctx.fillStyle = "#00ff00";
-			this.ctx.beginPath();
-			this.ctx.moveTo(arrowSize, 0);
-			this.ctx.lineTo(-arrowSize / 2, arrowSize / 2);
-			this.ctx.lineTo(-arrowSize / 2, -arrowSize / 2);
-			this.ctx.closePath();
-			this.ctx.fill();
-
-			// Draw glow effect
-			this.ctx.shadowColor = "#00ff00";
-			this.ctx.shadowBlur = 10;
-			this.ctx.fill();
-
-			// Restore context
-			this.ctx.restore();
-
-			// Draw "EXIT" text near the arrow
-			this.ctx.save();
-			this.ctx.fillStyle = "#00ff00";
-			this.ctx.font = 'bold 12px "Courier New", monospace';
-			this.ctx.textAlign = "center";
-			const textOffset = arrowSize + 15;
-			const textX =
-				this.player.x + normalizedDx * (indicatorDistance + textOffset);
-			const textY =
-				this.player.y + normalizedDy * (indicatorDistance + textOffset);
-			this.ctx.fillText("EXIT", textX, textY);
-			this.ctx.restore();
-		}
 	}
 }
 

@@ -87,11 +87,7 @@ class PopupManager {
 		if (this.isVisible) {
 			return;
 		}
-
-		// Set callback function
 		this.callback = callback;
-
-		// Get content for the artifact type
 		const content = this.educationalContent[artifactType];
 
 		if (!content) {
@@ -101,7 +97,6 @@ class PopupManager {
 			return;
 		}
 
-		// Set title and content
 		this.title.textContent = content.title;
 
 		// Randomly select one fact from the content array
@@ -116,7 +111,6 @@ class PopupManager {
 		this.container.style.opacity = "0";
 		this.container.style.transform = "translate(-50%, -60%)";
 
-		// Apply animation
 		setTimeout(() => {
 			this.container.style.transition = "opacity 0.3s, transform 0.3s";
 			this.container.style.opacity = "1";

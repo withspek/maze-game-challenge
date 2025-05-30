@@ -5,72 +5,6 @@ const getRandomInt = (min, max) => {
 	return Math.floor(Math.random() * (lmax - lmin + 1)) + lmin;
 };
 
-// Random float between min and max
-const getRandomFloat = (min, max) => {
-	return Math.random() * (max - min) + min;
-};
-
-// Get HSL color string from hue value
-const getHSLColor = (hue, saturation = 100, lightness = 50) => {
-	return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-};
-
-// Procedural texture generation
-const generateNoiseTexture = (
-	ctx,
-	width,
-	height,
-	color = "#ffffff",
-	alpha = 0.1,
-) => {
-	const imageData = ctx.createImageData(width, height);
-	const data = imageData.data;
-
-	for (let i = 0; i < data.length; i += 4) {
-		const value = Math.random() * 255;
-
-		// Parse color to RGB
-		const hexToRgb = (hex) => {
-			const bigint = Number.parseInt(hex.slice(1), 16);
-			return {
-				r: (bigint >> 16) & 255,
-				g: (bigint >> 8) & 255,
-				b: bigint & 255,
-			};
-		};
-
-		const rgb = hexToRgb(color);
-
-		data[i] = rgb.r;
-		data[i + 1] = rgb.g;
-		data[i + 2] = rgb.b;
-		data[i + 3] = value * alpha;
-	}
-
-	return imageData;
-};
-
-// Generate a gradient texture
-const generateGradientTexture = (
-	ctx,
-	width,
-	height,
-	color1,
-	color2,
-	vertical = true,
-) => {
-	const gradient = vertical
-		? ctx.createLinearGradient(0, 0, 0, height)
-		: ctx.createLinearGradient(0, 0, width, 0);
-
-	gradient.addColorStop(0, color1);
-	gradient.addColorStop(1, color2);
-
-	ctx.fillStyle = gradient;
-	ctx.fillRect(0, 0, width, height);
-};
-
-// Draw rounded rectangle
 const drawRoundedRect = (
 	ctx,
 	x,
@@ -116,12 +50,6 @@ const calculateDistance = (x1, y1, x2, y2) => {
 	return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 };
 
-// Lerp (linear interpolation) between two values
-const lerp = (start, end, amt) => {
-	return (1 - amt) * start + amt * end;
-};
-
-// Save game state to localStorage
 const saveGameState = (state) => {
 	try {
 		localStorage.setItem("futureskillsArtifact", JSON.stringify(state));
@@ -132,7 +60,6 @@ const saveGameState = (state) => {
 	}
 };
 
-// Load game state from localStorage
 const loadGameState = () => {
 	try {
 		const state = localStorage.getItem("futureskillsArtifact");
@@ -143,7 +70,6 @@ const loadGameState = () => {
 	}
 };
 
-// Create particles at a position
 const createParticles = (
 	count,
 	x,

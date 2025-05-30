@@ -19,7 +19,6 @@ class Player {
 		this.maze = maze;
 		this.cellSize = cellSize;
 
-		// Movement state
 		this.vx = 0;
 		this.vy = 0;
 		this.isJumping = false;
@@ -28,7 +27,6 @@ class Player {
 		this.jumpSpeed = 2;
 		this.gravity = 0.5;
 
-		// Health and status
 		this.maxHealth = 100;
 		this.health = this.maxHealth;
 		this.invulnerable = false;
@@ -36,7 +34,6 @@ class Player {
 		this.invulnerableDuration = 60; // 1 second at 60 FPS
 		this.isDead = false;
 
-		// Effects
 		this.effects = {
 			slowed: {
 				active: false,
@@ -64,7 +61,6 @@ class Player {
 			green: "#20603D", // Green
 		};
 
-		// Debug properties
 		this.debug = {
 			enabled: false,
 			lastPosition: { x: this.x, y: this.y },
@@ -76,7 +72,6 @@ class Player {
 	}
 
 	setupControls() {
-		// Key state tracking
 		this.keys = {
 			up: false,
 			down: false,
@@ -169,11 +164,8 @@ class Player {
 		// Clear collision checks from previous frame
 		this.debug.collisionChecks = [];
 
-		// Update animation counters
 		this.frameCount++;
 		this.pulseValue = Math.sin(this.frameCount * 0.1) * 0.2 + 0.8;
-
-		// Update effect timers
 		this.updateEffects();
 
 		// Reset velocity
@@ -213,10 +205,7 @@ class Player {
 			}
 		}
 
-		// Store position before movement for debugging
 		this.debug.lastPosition = { x: this.x, y: this.y };
-
-		// Apply movement, checking for collisions
 		this.applyMovement();
 
 		// Check if player is stuck (position hasn't changed despite input)
@@ -233,8 +222,6 @@ class Player {
 				this.debug.stuckFrames = 0;
 			}
 		}
-
-		// Update particles
 		this.updateParticles();
 
 		// Create motion particles occasionally
@@ -404,7 +391,6 @@ class Player {
 				}
 
 				if (!canMove) {
-					// Set a safe distance from the wall (1/3 of player height)
 					const safeDistance = this.height / 3;
 
 					// Align to the edge of the current cell with safe distance
@@ -508,7 +494,6 @@ class Player {
 	}
 
 	createDeathParticles() {
-		// Create a large explosion of particles on death
 		const particleCount = 30;
 
 		for (let i = 0; i < particleCount; i++) {
@@ -590,7 +575,6 @@ class Player {
 	}
 
 	getCollisionBox() {
-		// Return the player's collision box for hit detection
 		return {
 			x: this.x - this.width / 2,
 			y: this.y - this.height / 2 + this.jumpHeight,
@@ -630,10 +614,8 @@ class Player {
 				ctx.globalAlpha = 0.6;
 			}
 
-			// Apply pulse effect
+			// pulse effect
 			const pulseSize = this.width * this.pulseValue;
-
-			// Draw player with Rwanda flag colors
 			ctx.save();
 
 			// If damaged, override with red color
@@ -704,7 +686,6 @@ class Player {
 				ctx.fill();
 			}
 
-			// Add white border
 			ctx.strokeStyle = "#ffffff";
 			ctx.lineWidth = 1;
 			drawRoundedRect(
@@ -719,8 +700,6 @@ class Player {
 			);
 
 			ctx.restore();
-
-			// Draw health bar
 			this.renderHealthBar(ctx);
 		}
 
@@ -759,7 +738,6 @@ class Player {
 	}
 
 	renderParticles(ctx) {
-		// Render all particles
 		for (const particle of this.particles) {
 			ctx.globalAlpha = particle.alpha || particle.life / 20; // Use alpha if set, otherwise calculate from life
 			ctx.fillStyle = particle.color;
@@ -821,40 +799,18 @@ class Player {
 			ctx.stroke();
 		}
 
-		// Display player state
-		ctx.fillStyle = "white";
-		ctx.font = "12px monospace";
-		ctx.textAlign = "left";
-
-		let textY = box.y - 55;
-		ctx.fillText(
-			`Pos: (${Math.round(this.x)}, ${Math.round(this.y)})`,
-			box.x,
-			textY,
-		);
-		textY += 15;
-		ctx.fillText(`Cell: (${cellX}, ${cellY})`, box.x, textY);
-		textY += 15;
-		ctx.fillText(
-			`Vel: (${this.vx.toFixed(1)}, ${this.vy.toFixed(1)})`,
-			box.x,
-			textY,
-		);
-		textY += 15;
-
 		// Draw nearest walls
 		const directions = [
-			{ dx: 0, dy: -1, dir: 0, name: "↑" }, // Top
-			{ dx: 1, dy: 0, dir: 1, name: "→" }, // Right
-			{ dx: 0, dy: 1, dir: 2, name: "↓" }, // Bottom
-			{ dx: -1, dy: 0, dir: 3, name: "←" }, // Left
+			{ dx: 0, dy: -1, dir: 0 }, // Top
+			{ dx: 1, dy: 0, dir: 1 }, // Right
+			{ dx: 0, dy: 1, dir: 2 }, // Bottom
+			{ dx: -1, dy: 0, dir: 3 }, // Left
 		];
 
 		for (const dir of directions) {
 			const hasWall = this.maze.isWall(this.x, this.y, dir.dir);
 
 			if (hasWall) {
-				// Draw wall indicator
 				ctx.strokeStyle = "red";
 				ctx.lineWidth = 2;
 
@@ -876,16 +832,6 @@ class Player {
 					ctx.lineTo(wallX, cellY * this.cellSize + wallLength);
 				}
 				ctx.stroke();
-
-				// Label the wall
-				ctx.fillStyle = "white";
-				ctx.font = "14px monospace";
-				ctx.textAlign = "center";
-				ctx.fillText(
-					dir.name,
-					this.x + dir.dx * this.cellSize * 0.3,
-					this.y + dir.dy * this.cellSize * 0.3,
-				);
 			}
 		}
 

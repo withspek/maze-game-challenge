@@ -52,7 +52,7 @@ class Player {
 		// Animation state
 		this.frameCount = 0;
 		this.pulseValue = 0;
-s
+
 		this.rwandaColors = {
 			blue: "#00A0D5", // Sky blue
 			yellow: "#E5BE01", // Yellow
